@@ -931,6 +931,13 @@
         <input type="text" id="setPageTitle" maxlength="80">
       </div>
 
+      <div class="settings-section-label">শুভেচ্ছা বার্তা</div>
+      <div class="field">
+        <label>ড্যাশবোর্ডের উপরের শুভেচ্ছা লেখা</label>
+        <input type="text" id="setGreetingText" maxlength="60" placeholder="যেমনঃ স্বাগতম!">
+        <div class="field-hint">খালি রাখলে সময় অনুযায়ী (সুপ্রভাত / শুভ বিকাল / শুভ সন্ধ্যা) স্বয়ংক্রিয়ভাবে দেখাবে। কিছু লিখলে সবসময় এটাই দেখাবে।</div>
+      </div>
+
       <div class="settings-section-label">বাটন ও শিরোনাম</div>
       <div class="field">
         <label>"নতুন পরীক্ষা যোগ করুন" বাটনের লেখা</label>
@@ -1104,7 +1111,8 @@ const DEFAULT_TEXT = {
   statSoonLabel: '৭ দিনের মধ্যে',
   statMonthLabel: 'এই মাসে',
   statPastLabel: 'সমাপ্ত পরীক্ষা',
-  primaryColor: '#D9333F'
+  primaryColor: '#D9333F',
+  greetingOverride: ''
 };
 
 function loadTexts(){
@@ -1181,6 +1189,7 @@ function updateEventsHeading(){
 function applyTexts(){
   applyPrimaryColor(siteText.primaryColor);
   document.title = siteText.pageTitle;
+  setGreeting();
   document.getElementById('brandTitleEl').textContent = siteText.brandTitle;
   document.getElementById('brandSubtitleEl').textContent = siteText.brandSubtitle;
   document.getElementById('mobileTopbarTitle').textContent = siteText.brandTitle;
@@ -1212,6 +1221,7 @@ function openSettingsModal(){
   document.getElementById('setBrandTitle').value = siteText.brandTitle;
   document.getElementById('setBrandSubtitle').value = siteText.brandSubtitle;
   document.getElementById('setPageTitle').value = siteText.pageTitle;
+  document.getElementById('setGreetingText').value = siteText.greetingOverride || '';
   document.getElementById('setAddBtnLabel').value = siteText.addBtnLabel;
   document.getElementById('setCalHeading').value = siteText.calHeading;
   document.getElementById('setStatTotal').value = siteText.statTotalLabel;
@@ -1234,6 +1244,7 @@ function saveSettings(e){
   siteText.brandTitle = document.getElementById('setBrandTitle').value.trim() || DEFAULT_TEXT.brandTitle;
   siteText.brandSubtitle = document.getElementById('setBrandSubtitle').value.trim() || DEFAULT_TEXT.brandSubtitle;
   siteText.pageTitle = document.getElementById('setPageTitle').value.trim() || DEFAULT_TEXT.pageTitle;
+  siteText.greetingOverride = document.getElementById('setGreetingText').value.trim();
   siteText.addBtnLabel = document.getElementById('setAddBtnLabel').value.trim() || DEFAULT_TEXT.addBtnLabel;
   siteText.calHeading = document.getElementById('setCalHeading').value.trim() || DEFAULT_TEXT.calHeading;
   siteText.statTotalLabel = document.getElementById('setStatTotal').value.trim() || DEFAULT_TEXT.statTotalLabel;
@@ -1290,12 +1301,18 @@ function tagColor(tag){
 
 /* ================= GREETING ================= */
 function setGreeting(){
-  const h = new Date().getHours();
-  let g = 'শুভ সকাল';
-  if(h>=12 && h<16) g = 'শুভ অপরাহ্ণ';
-  else if(h>=16 && h<19) g = 'শুভ বিকাল';
-  else if(h>=19 || h<5) g = 'শুভ সন্ধ্যা';
-  document.getElementById('greetingText').textContent = g + ' 👋';
+  let g;
+  if(siteText.greetingOverride && siteText.greetingOverride.trim()){
+    g = siteText.greetingOverride.trim();
+  } else {
+    const h = new Date().getHours();
+    g = 'শুভ সকাল';
+    if(h>=12 && h<16) g = 'শুভ অপরাহ্ণ';
+    else if(h>=16 && h<19) g = 'শুভ বিকাল';
+    else if(h>=19 || h<5) g = 'শুভ সন্ধ্যা';
+    g = g + ' 👋';
+  }
+  document.getElementById('greetingText').textContent = g;
 
   const today = new Date();
   document.getElementById('todayText').textContent =
@@ -1757,7 +1774,6 @@ function renderAll(){
 }
 
 applyTexts();
-setGreeting();
 renderAll();
 fetchRemoteState();
 
