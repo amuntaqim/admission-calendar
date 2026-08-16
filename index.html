@@ -1042,6 +1042,8 @@ let editingId = null;
 let currentView = 'dashboard';
 let tagFilter = null;
 let dashboardFilter = 'upcoming'; // 'upcoming' | 'past' | 'all'
+let isSaving = false;
+let skipNextAutoRefresh = false;
 
 /* ================= ADMIN AUTH ================= */
 const ADMIN_PW_KEY = 'ng_admin_pw';
@@ -1070,9 +1072,11 @@ async function persistState(successMsg){
     try { sessionStorage.setItem(ADMIN_PW_KEY, pw); } catch(e){ /* ignore */ }
   }
 
+  isSaving = true;
   try {
     const res = await fetch(API_URL, {
       method: 'POST',
+      cache: 'no-store',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminPassword },
       body: JSON.stringify({ events, siteText, tagColors })
     });
@@ -1092,16 +1096,24 @@ async function persistState(successMsg){
       console.error('Publish failed:', detail);
       return;
     }
+    skipNextAutoRefresh = true;
     showToast(successMsg || '✅ পরিবর্তন সবার জন্য পাবলিশ হয়েছে');
   } catch(e){
     showToast('⚠️ নেটওয়ার্ক সমস্যা — পরিবর্তন পাবলিশ হয়নি, পরে আবার চেষ্টা করুন');
     console.error('Publish network error:', e);
+  } finally {
+    isSaving = false;
   }
 }
 
 async function fetchRemoteState(){
+  if(isSaving) return; // don't let a background refresh clobber an in-flight save
+  if(skipNextAutoRefresh){
+    skipNextAutoRefresh = false;
+    return;
+  }
   try {
-    const res = await fetch(API_URL);
+    const res = await fetch(API_URL, { cache: 'no-store' });
     if(!res.ok) throw new Error('bad status ' + res.status);
     const data = await res.json();
     events = Array.isArray(data.events) ? data.events : [];

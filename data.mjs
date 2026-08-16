@@ -16,7 +16,8 @@ const DEFAULT_STATE = {
     statSoonLabel: '৭ দিনের মধ্যে',
     statMonthLabel: 'এই মাসে',
     statPastLabel: 'সমাপ্ত পরীক্ষা',
-    primaryColor: '#D9333F'
+    primaryColor: '#D9333F',
+    greetingOverride: ''
   },
   tagColors: {}
 };
@@ -29,7 +30,7 @@ const CORS_HEADERS = {
 
 export default async (req) => {
   try {
-    const store = getStore('nextgate-data');
+    const store = getStore({ name: 'nextgate-data', consistency: 'strong' });
 
     if (req.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: CORS_HEADERS });
@@ -43,7 +44,7 @@ export default async (req) => {
         data = null;
       }
       return new Response(JSON.stringify(data || DEFAULT_STATE), {
-        headers: { 'Content-Type': 'application/json', ...CORS_HEADERS }
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store, no-cache, must-revalidate', ...CORS_HEADERS }
       });
     }
 
