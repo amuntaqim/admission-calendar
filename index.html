@@ -1,0 +1,1706 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NextGate — পরীক্ষা ট্র্যাকার</title>
+<link rel="icon" type="image/png" sizes="512x512" href="favicon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F5F5F7;
+    --bg-soft: #F1EEF1;
+    --card: #FFFFFF;
+    --sidebar-bg: #FFFFFF;
+    --primary: #D9333F;
+    --primary-dark: #A8232D;
+    --primary-light: #FCE1E2;
+    --primary-rgb: 217,51,63;
+    --accent-orange: #F2994A;
+    --accent-orange-bg: #FDF0E4;
+    --accent-teal: #3B82C4;
+    --accent-teal-bg: #E8F1FA;
+    --accent-red: #B71C2B;
+    --accent-red-bg: #F8E0E0;
+    --accent-pink: #FF5FA0;
+    --accent-blue: #7C5CBF;
+    --text: #221F3D;
+    --text-muted: #8C8AA3;
+    --text-faint: #B4B2C6;
+    --border: #ECEAF6;
+    --shadow: 0 8px 24px rgba(20, 16, 30, 0.07);
+    --shadow-lg: 0 20px 48px rgba(20, 16, 30, 0.18);
+    --radius: 18px;
+    --radius-sm: 12px;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+
+  body{
+    font-family: 'Hind Siliguri', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    -webkit-font-smoothing: antialiased;
+    font-size: 15px;
+  }
+
+  /* ---------- SIDEBAR ---------- */
+  .sidebar{
+    width: 272px;
+    background: var(--sidebar-bg);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 26px 20px;
+    flex-shrink: 0;
+    overflow-y: auto;
+    z-index: 50;
+    border-right: 1px solid var(--border);
+  }
+  .brand{
+    display:flex; align-items:center; gap: 12px;
+    margin-bottom: 30px;
+    padding: 0 4px;
+  }
+  .brand-logo{
+    width: 44px; height: 44px;
+    background: linear-gradient(145deg, var(--primary), var(--primary-dark));
+    border-radius: 13px;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+    box-shadow: 0 8px 16px rgba(var(--primary-rgb),0.35);
+  }
+  .brand-logo svg{ width:23px; height:23px; stroke:#fff; }
+  .brand-text{ flex:1; min-width:0; }
+  .brand-text h1{ font-size: 19px; font-weight:700; line-height:1.2; overflow-wrap:break-word; }
+  .brand-text p{ font-size: 13px; color: var(--text-muted); overflow-wrap:break-word; }
+  .settings-btn{
+    width: 34px; height:34px; border-radius: 10px; border:none;
+    background: var(--bg); color: var(--text-muted);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; flex-shrink:0; transition: all .15s ease;
+  }
+  .settings-btn:hover{ background: var(--primary-light); color: var(--primary); transform: rotate(35deg); }
+  .settings-btn svg{ width:16px; height:16px; }
+
+  /* ---------- MOBILE SIDEBAR (hamburger overlay) ---------- */
+  .mobile-topbar{
+    display:none;
+    align-items:center; justify-content:space-between;
+    position: fixed; top:0; left:0; right:0;
+    height: 60px;
+    padding: 0 16px;
+    background: var(--card);
+    box-shadow: var(--shadow);
+    z-index: 150;
+  }
+  .mobile-topbar-left{ display:flex; align-items:center; gap:12px; min-width:0; }
+  .mobile-topbar-title{ font-size:17px; font-weight:700; color: var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .hamburger-btn{
+    width:40px; height:40px; border-radius:11px; border:none;
+    background: var(--bg); color: var(--text);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    flex-shrink:0; transition: all .15s ease;
+  }
+  .hamburger-btn:hover{ background: var(--primary-light); color: var(--primary); }
+  .hamburger-btn:active{ transform: scale(0.94); }
+  .hamburger-btn svg{ width:19px; height:19px; }
+
+  .mobile-settings-btn{
+    width:38px; height:38px; border-radius:11px; border:none;
+    background: var(--bg); color: var(--text-muted);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    flex-shrink:0; transition: all .15s ease;
+  }
+  .mobile-settings-btn:hover{ background: var(--primary-light); color: var(--primary); }
+  .mobile-settings-btn svg{ width:17px; height:17px; }
+
+  .sidebar-backdrop{
+    display:none;
+    position: fixed; inset:0; background: rgba(34,31,61,0.5);
+    z-index: 190; backdrop-filter: blur(1px);
+  }
+  .sidebar-backdrop.show{ display:block; }
+
+  .nav-section-label{
+    font-size: 13px; font-weight:600; color: var(--text-faint);
+    margin: 4px 0 10px 4px;
+    letter-spacing: 0.3px;
+  }
+  .sidebar-nav{ display:flex; flex-direction:column; gap: 6px; margin-bottom: 26px; }
+  .nav-btn{
+    display:flex; align-items:center; gap: 12px;
+    padding: 12px 14px;
+    border-radius: 13px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    text-align: right;
+    width: 100%;
+    transition: all .15s ease;
+  }
+  .nav-btn .nav-icon{
+    width: 34px; height:34px; border-radius: 10px;
+    background: var(--bg);
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+    color: var(--text-muted);
+    transition: all .15s ease;
+  }
+  .nav-btn .nav-icon svg{ width:17px; height:17px; }
+  .nav-btn span.label{ flex:1; text-align: left; }
+  .nav-btn:hover{ background: var(--bg); }
+  .nav-btn.active{ background: var(--primary); color:#fff; box-shadow: 0 8px 18px rgba(var(--primary-rgb),0.3); }
+  .nav-btn.active .nav-icon{ background: rgba(255,255,255,0.2); color:#fff; }
+
+  .filter-section{ margin-bottom: 20px; }
+  .filter-list{ display:flex; flex-direction:column; gap: 2px; }
+  .filter-row{
+    display:flex; align-items:center; gap: 10px;
+    padding: 9px 8px;
+    border-radius: 10px;
+    cursor:pointer;
+    font-size: 14.5px;
+    color: var(--text);
+    background: transparent;
+    border: none;
+    font-family: inherit;
+    width: 100%;
+    text-align: right;
+  }
+  .filter-row:hover{ background: var(--bg); }
+  .filter-row.active{ background: var(--primary-light); }
+  .filter-dot{ width: 10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .filter-row span.fname{ flex:1; text-align:left; }
+  .filter-row span.fcount{ font-size: 13px; font-weight:700; color: var(--accent-blue); }
+  .filter-empty{ font-size: 13.5px; color: var(--text-faint); padding: 6px 8px; }
+
+  .sidebar-spacer{ flex: 1; }
+
+  .sidebar::-webkit-scrollbar, .calendar-card::-webkit-scrollbar{ width: 6px; }
+  .sidebar::-webkit-scrollbar-thumb, .calendar-card::-webkit-scrollbar-thumb{ background: var(--border); border-radius: 8px; }
+
+  .nearest-card{
+    background: linear-gradient(150deg, var(--primary), var(--primary-dark));
+    border-radius: 18px;
+    padding: 18px;
+    display: none;
+    box-shadow: 0 14px 28px rgba(var(--primary-rgb),0.32);
+  }
+  .nearest-card.show{ display:block; }
+  .nearest-top{ display:flex; align-items:center; gap: 12px; margin-bottom: 12px; }
+  .nearest-ring{
+    width: 46px; height: 46px; border-radius:50%;
+    border: 2.5px solid rgba(255,255,255,0.55);
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+    background: rgba(255,255,255,0.14);
+  }
+  .nearest-ring.normal{ border-color: rgba(255,255,255,0.85); }
+  .nearest-ring span{ font-size: 15px; font-weight:700; color: #fff; }
+  .nearest-ring.normal span{ color: #fff; }
+  .nearest-label{ font-size: 12.5px; color: rgba(255,255,255,0.75); font-weight:600; }
+  .nearest-title{ font-size: 14.5px; font-weight:700; line-height:1.35; margin-bottom: 6px; color: #fff; }
+  .nearest-date{ font-size: 13px; color: rgba(255,255,255,0.85); }
+
+  /* ---------- MAIN ---------- */
+  .main{
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 32px 40px 24px;
+  }
+
+  .topbar{
+    display:flex; align-items:flex-start; justify-content:space-between;
+    flex-wrap: wrap; gap: 16px;
+    margin-bottom: 28px;
+    flex-shrink: 0;
+  }
+  .topbar h1{ font-size: 26px; font-weight:700; margin-bottom:4px; }
+  .topbar p{ color: var(--text-muted); font-size: 15px; }
+  .add-btn{
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    padding: 13px 22px;
+    border-radius: 13px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    display:flex; align-items:center; gap:8px;
+    cursor:pointer;
+    box-shadow: 0 10px 22px rgba(var(--primary-rgb),0.35);
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .add-btn:hover{ transform: translateY(-2px); box-shadow: 0 14px 26px rgba(var(--primary-rgb),0.42); }
+  .add-btn svg{ width:18px; height:18px; }
+
+  /* ---------- STATS ---------- */
+  .stats{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin-bottom: 28px;
+    flex-shrink: 0;
+  }
+  body[data-view="calendar"] .stats, body[data-view="all"] .stats{ display:none; }
+
+  .stat-card{
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    box-shadow: var(--shadow);
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .stat-top{ display:flex; align-items:center; justify-content:space-between; }
+  .stat-icon{
+    width: 40px; height:40px; border-radius: 11px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .stat-icon svg{ width:19px; height:19px; }
+  .stat-icon.purple{ background: var(--primary-light); color: var(--primary); }
+  .stat-icon.orange{ background: var(--accent-orange-bg); color: var(--accent-orange); }
+  .stat-icon.teal{ background: var(--accent-teal-bg); color: var(--accent-teal); }
+  .stat-icon.red{ background: var(--accent-red-bg); color: var(--accent-red); }
+  .stat-value{ font-size: 26px; font-weight: 700; }
+  .stat-label{ font-size: 14px; color: var(--text-muted); }
+
+  /* ---------- LAYOUT GRID ---------- */
+  .content-grid{
+    display:grid;
+    grid-template-columns: 400px 1fr;
+    grid-template-rows: minmax(0, 1fr);
+    gap: 22px;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+  body[data-view="calendar"] .content-grid,
+  body[data-view="all"] .content-grid{
+    grid-template-columns: 1fr;
+  }
+  body[data-view="all"] .calendar-card{ display: none; }
+  body[data-view="calendar"] .calendar-card{ max-width: 620px; width: 100%; margin: 0 auto; padding: 30px; }
+  body[data-view="calendar"] .day-cell{ font-size: 15.5px; }
+
+  /* ---------- CALENDAR ---------- */
+  .calendar-card{
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 22px;
+    align-self: start;
+    max-height: 100%;
+    overflow-y: auto;
+  }
+  .cal-head{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom: 18px;
+  }
+  .cal-head h2{ font-size: 17.5px; font-weight:700; display:flex; gap:9px; align-items:center;}
+  .cal-head h2 svg{ width:19px; height:19px; color:var(--primary); }
+  .cal-nav{ display:flex; align-items:center; gap: 6px; background: var(--bg); border-radius: 10px; padding: 4px; }
+  .cal-nav button{
+    width: 32px; height:32px; border:none; background:transparent; border-radius:8px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; color: var(--text);
+  }
+  .cal-nav button:hover{ background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.08);}
+  .cal-nav svg{ width:16px; height:16px; }
+  .cal-month-label{ font-size: 14.5px; font-weight:600; padding: 0 6px; min-width: 118px; text-align:center; }
+
+  .weekdays{
+    display:grid; grid-template-columns: repeat(7,1fr);
+    margin-bottom: 6px;
+  }
+  .weekdays span{
+    text-align:center; font-size: 13.5px; color: var(--text-faint); font-weight:600; padding-bottom: 6px;
+  }
+  .days-grid{
+    display:grid; grid-template-columns: repeat(7,1fr);
+    gap: 4px;
+  }
+  .day-cell{
+    aspect-ratio: 1/1;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    border-radius: 11px;
+    font-size: 14px;
+    cursor:pointer;
+    position: relative;
+    color: var(--text);
+    transition: background .15s ease, color .15s ease;
+    gap: 2px;
+  }
+  .day-cell.muted{ color: var(--text-faint); cursor:default; }
+  .day-cell:not(.muted):hover{ background: var(--primary-light); }
+  .day-cell.today{ border: 1.5px solid var(--primary); font-weight:700; }
+  .day-cell.selected{ background: var(--primary); color: #fff; font-weight:700; }
+  .day-cell.selected .exam-dot{ background:#fff; }
+  .day-cell .exam-mark{ font-size: 11px; line-height:1; }
+  .day-cell .exam-dot{
+    width: 5px; height:5px; border-radius:50%; background: var(--accent-orange);
+    position:absolute; bottom: 6px;
+  }
+  .day-cell.has-event:not(.selected){ background: var(--accent-orange-bg); }
+  .day-cell.has-event:not(.selected):hover{ background: var(--primary-light); }
+  .day-cell.has-event.today{ background: var(--accent-orange-bg); }
+
+  .cal-legend{
+    margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);
+    display:flex; align-items:center; gap: 8px; font-size: 13.5px; color: var(--text-muted);
+  }
+  .cal-legend .dotwrap{ width:18px; height:18px; border-radius:6px; background: var(--primary-light); display:flex; align-items:center; justify-content:center; color: var(--primary); flex-shrink:0; }
+  .cal-legend svg{ width:11px; height:11px; }
+
+  .clear-filter{
+    margin-top: 14px;
+    width: 100%;
+    background: var(--bg);
+    border: 1px dashed var(--border);
+    color: var(--text-muted);
+    padding: 11px;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 13.5px;
+    cursor:pointer;
+    display:none;
+  }
+  .clear-filter.show{ display:block; }
+  .clear-filter:hover{ background: var(--accent-red-bg); color: var(--accent-red); border-color: transparent;}
+
+  /* ---------- EVENTS PANEL ---------- */
+  .events-panel{
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 22px;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .events-head{
+    display:flex; align-items:center; justify-content:space-between; gap: 14px; flex-wrap:wrap;
+    margin-bottom: 18px;
+    flex-shrink: 0;
+  }
+  .events-head h2{ font-size: 17.5px; font-weight:700; display:flex; align-items:center; gap:9px;}
+  .events-head h2 svg{ width:19px; height:19px; color: var(--primary); }
+  .filter-chip{
+    background: var(--primary-light); color: var(--primary);
+    font-size: 13px; font-weight:600; padding: 6px 13px; border-radius: 20px;
+    display:none; align-items:center; gap:6px;
+  }
+  .filter-chip.show{ display:inline-flex; }
+  .search-wrap{
+    position: relative; flex:1; min-width: 180px; max-width: 260px;
+  }
+  .search-wrap svg{ position:absolute; left: 13px; top:50%; transform:translateY(-50%); width:16px; height:16px; color: var(--text-faint); }
+  .search-wrap input{
+    width:100%; padding: 11px 14px 11px 38px;
+    border-radius: 11px; border: 1px solid var(--border); background: var(--bg);
+    font-family: inherit; font-size: 14.5px; color: var(--text);
+  }
+  .search-wrap input:focus{ outline:none; border-color: var(--primary); background:#fff; }
+
+  .section-heading{
+    font-size: 14.5px; font-weight:700; color: var(--text-muted);
+    margin: 4px 0 12px; display:flex; align-items:center; gap:8px;
+  }
+  .section-heading:not(:first-child){ margin-top: 26px; }
+
+  .event-cards{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px,1fr));
+    gap: 16px;
+  }
+
+  #eventsBody{
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 6px;
+    margin-right: -6px;
+  }
+  #eventsBody::-webkit-scrollbar{ width: 8px; }
+  #eventsBody::-webkit-scrollbar-track{ background: transparent; }
+  #eventsBody::-webkit-scrollbar-thumb{ background: var(--border); border-radius: 8px; }
+  #eventsBody::-webkit-scrollbar-thumb:hover{ background: var(--text-faint); }
+
+  .event-card{
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 18px;
+    position: relative;
+    transition: box-shadow .15s ease, transform .15s ease;
+    display:flex; flex-direction:column; gap: 12px;
+  }
+  .event-card:hover{ box-shadow: var(--shadow); transform: translateY(-2px); }
+  .event-card.past{ opacity: 0.6; }
+
+  .ev-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .ev-icon{
+    width: 42px; height:42px; border-radius:12px; flex-shrink:0;
+    background: var(--primary-light); color: var(--primary);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .ev-icon svg{ width:20px; height:20px; }
+  .ev-actions{ display:flex; gap:4px; }
+  .ev-actions button{
+    width:31px; height:31px; border:none; background: var(--bg); border-radius:8px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; color: var(--text-muted);
+  }
+  .ev-actions button svg{ width:15px; height:15px; }
+  .ev-actions button:hover{ background: var(--primary-light); color: var(--primary); }
+  .ev-actions button.del:hover{ background: var(--accent-red-bg); color: var(--accent-red); }
+
+  .ev-name{ font-size: 16.5px; font-weight:700; line-height:1.35; }
+  .ev-details{ font-size: 14px; color: var(--text-muted); line-height:1.5; }
+  .ev-tag{ font-size: 12.5px; font-weight:700; padding: 4px 10px; border-radius: 7px; display:inline-flex; align-items:center; gap:5px; width: fit-content; }
+  .ev-tag .tagdot{ width:7px; height:7px; border-radius:50%; }
+
+  .ev-meta{ display:flex; flex-wrap:wrap; gap:8px; }
+  .ev-meta span{
+    font-size: 13px; font-weight:600; padding: 5px 10px; border-radius: 8px;
+    display:flex; align-items:center; gap:5px;
+  }
+  .ev-meta span svg{ width:12px; height:12px; }
+  .meta-date{ background: var(--primary-light); color: var(--primary); }
+  .meta-time{ background: var(--accent-teal-bg); color: var(--accent-teal); }
+
+  .ev-bottom{ display:flex; align-items:center; justify-content:space-between; gap: 10px; margin-top:auto; padding-top: 6px; border-top: 1px dashed var(--border); }
+  .countdown{ font-size: 13.5px; font-weight:700; display:flex; align-items:center; gap:6px; }
+  .countdown.soon{ color: var(--accent-red); }
+  .countdown.normal{ color: var(--accent-orange); }
+  .countdown.past{ color: var(--text-faint); }
+  .countdown svg{ width:14px; height:14px; }
+  .circular-link{
+    font-size: 13px; font-weight:600; color: var(--primary);
+    display:flex; align-items:center; gap:5px; text-decoration:none;
+    background: var(--primary-light); padding: 7px 12px; border-radius: 9px;
+  }
+  .circular-link:hover{ background: var(--primary); color:#fff; }
+  .circular-link svg{ width:13px; height:13px; }
+  .no-link{ font-size: 13px; color: var(--text-faint); }
+
+  .empty-state{
+    grid-column: 1/-1;
+    text-align:center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+  }
+  .empty-state svg{ width:56px; height:56px; color: var(--text-faint); margin-bottom: 16px; }
+  .empty-state h3{ font-size:16.5px; color: var(--text); margin-bottom:6px; }
+  .empty-state p{ font-size: 14px; }
+
+  /* ---------- MODAL ---------- */
+  .modal-overlay{
+    position: fixed; inset:0; background: rgba(34,31,61,0.45);
+    display:none; align-items:center; justify-content:center; z-index: 100;
+    padding: 20px;
+    backdrop-filter: blur(2px);
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal{
+    background:#fff; border-radius: 22px; width: 100%; max-width: 460px;
+    padding: 28px; box-shadow: var(--shadow-lg);
+    max-height: 90vh; overflow-y:auto;
+    animation: pop .18s ease;
+  }
+  @keyframes pop{ from{ transform: scale(0.96); opacity:0;} to{ transform:scale(1); opacity:1;} }
+  .modal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 22px; }
+  .modal-head h3{ font-size: 19.5px; font-weight:700; }
+  .modal-close{ width:34px; height:34px; border:none; background: var(--bg); border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; color: var(--text-muted); }
+  .modal-close svg{ width:16px; height:16px; }
+
+  .field{ margin-bottom: 16px; }
+  .field label{ display:block; font-size: 14px; font-weight:600; margin-bottom: 7px; color: var(--text); }
+  .field .req{ color: var(--accent-red); }
+  .field input, .field textarea{
+    width:100%; padding: 12px 14px; border-radius: 11px; border: 1.5px solid var(--border);
+    font-family: inherit; font-size: 15px; color: var(--text); background: var(--bg);
+  }
+  .field input:focus, .field textarea:focus{ outline:none; border-color: var(--primary); background:#fff; }
+  .field textarea{ resize: vertical; min-height: 70px; }
+  .field-row{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field-hint{ font-size: 13px; color: var(--text-faint); margin-top: 5px; }
+
+  .modal-actions{ display:flex; gap: 10px; margin-top: 22px; }
+  .btn-cancel, .btn-save{
+    flex:1; padding: 13px; border-radius: 12px; font-family: inherit; font-size: 15px; font-weight:600; cursor:pointer; border:none;
+  }
+  .btn-cancel{ background: var(--bg); color: var(--text-muted); }
+  .btn-cancel:hover{ background: #E5E2F5; }
+  .btn-save{ background: var(--primary); color:#fff; box-shadow: 0 8px 18px rgba(var(--primary-rgb),0.35); }
+  .btn-save:hover{ background: var(--primary-dark); }
+
+  .color-field-row{ display:flex; align-items:center; gap: 12px; }
+  .field input[type="color"]{
+    width: 54px; height: 44px; padding: 3px; border-radius: 11px; border: 1.5px solid var(--border);
+    cursor: pointer; background: var(--bg); flex-shrink:0;
+  }
+  .color-swatches{ display:flex; align-items:center; gap: 8px; flex-wrap: wrap; }
+  .color-swatch{
+    width: 26px; height:26px; border-radius: 50%; cursor:pointer; border: 2px solid #fff;
+    box-shadow: 0 0 0 1.5px var(--border); flex-shrink:0; padding:0;
+  }
+  .color-swatch:hover{ box-shadow: 0 0 0 2px var(--text-faint); }
+  .tag-color-row{ display:flex; align-items:center; gap: 10px; }
+  .tag-color-row input[type="text"]{ flex:1; }
+
+  .settings-section-label{
+    font-size: 13px; font-weight:700; color: var(--primary);
+    text-transform:uppercase; letter-spacing:0.4px;
+    margin: 18px 0 10px;
+  }
+  .settings-section-label:first-of-type{ margin-top: 0; }
+
+  .toast{
+    position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--text); color:#fff; padding: 13px 22px; border-radius: 12px;
+    font-size: 14.5px; font-weight:500; z-index: 200; opacity:0; pointer-events:none;
+    transition: all .25s ease; display:flex; align-items:center; gap:9px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+  }
+  .toast.show{ opacity:1; transform: translateX(-50%) translateY(0); }
+  .toast svg{ width:16px; height:16px; color: #7CE0B8; flex-shrink:0; }
+
+  @media (max-width: 980px){
+    .content-grid{ grid-template-columns: 1fr; }
+    .stats{ grid-template-columns: repeat(2,1fr); }
+  }
+  @media (max-width: 860px){
+    body{ flex-direction: column; height: auto; overflow: visible; }
+    .mobile-topbar{ display:flex; }
+    .main{ padding-top: 76px; height: auto; overflow: visible; }
+    .content-grid{ overflow: visible; }
+    .calendar-card{ max-height: none; overflow: visible; }
+    .events-panel{ overflow: visible; }
+    #eventsBody{ overflow: visible; }
+    .sidebar{
+      position: fixed;
+      top: 0; left: 0;
+      width: 82%;
+      max-width: 300px;
+      height: 100vh;
+      min-height: 100vh;
+      transform: translateX(-100%);
+      transition: transform .28s ease;
+      z-index: 200;
+      box-shadow: var(--shadow-lg);
+      border-right: none;
+      border-radius: 0 20px 20px 0;
+      padding: 22px 18px;
+      overflow-y: auto;
+    }
+    .sidebar.open{ transform: translateX(0); }
+    .sidebar-spacer{ display:none; }
+    .nearest-card{ margin-top: 14px; }
+    .filter-section{ max-height: 220px; overflow-y:auto; }
+  }
+  @media (max-width: 640px){
+    .main{ padding: 20px 16px 50px; }
+    .stats{ grid-template-columns: 1fr 1fr; }
+    .topbar{ flex-direction:column; }
+    .add-btn{ width:100%; justify-content:center; }
+    .field-row{ grid-template-columns: 1fr; }
+    .calendar-card, .events-panel{ padding: 16px; }
+    .events-head{ flex-direction:column; align-items:stretch; }
+    .search-wrap{ max-width:none; }
+    .filter-chip{ align-self:flex-start; }
+  }
+  @media (max-width: 480px){
+    body{ font-size: 14px; }
+    .brand-logo{ width:38px; height:38px; }
+    .brand-text h1{ font-size:17px; }
+    .brand-text p{ font-size:12px; }
+    .stats{ grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat-card{ padding: 14px 16px; }
+    .stat-value{ font-size: 22px; }
+    .event-cards{ grid-template-columns: 1fr; }
+    .day-cell{ font-size: 12px; border-radius:8px; }
+    .day-cell .exam-mark{ font-size:9px; }
+    .cal-month-label{ min-width: 92px; font-size: 13px; }
+    .cal-nav button{ width:28px; height:28px; }
+    .modal{ padding: 20px; border-radius: 16px; max-width: 92vw; }
+    .modal-head h3{ font-size:17px; }
+    .topbar h1{ font-size: 22px; }
+  }
+  @media (max-width: 360px){
+    .stats{ grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body data-view="dashboard">
+
+<!-- MOBILE TOP BAR -->
+<header class="mobile-topbar" id="mobileTopbar">
+  <div class="mobile-topbar-left">
+    <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Open menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <span class="mobile-topbar-title" id="mobileTopbarTitle">NextGate</span>
+  </div>
+  <button class="mobile-settings-btn" onclick="openSettingsModal()" title="Settings" aria-label="Settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  </button>
+</header>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebarEl">
+  <div class="brand">
+    <div class="brand-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <div class="brand-text">
+      <h1 id="brandTitleEl">NextGate</h1>
+      <p id="brandSubtitleEl">পরীক্ষা ট্র্যাকার</p>
+    </div>
+    <button class="settings-btn" onclick="openSettingsModal()" title="টেক্সট সেটিংস">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </div>
+
+  <div class="nav-section-label">ওভারভিউ</div>
+  <nav class="sidebar-nav">
+    <button class="nav-btn active" data-view-btn="dashboard" onclick="switchView('dashboard')">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span>
+      <span class="label">ড্যাশবোর্ড</span>
+    </button>
+    <button class="nav-btn" data-view-btn="calendar" onclick="switchView('calendar')">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
+      <span class="label">ক্যালেন্ডার</span>
+    </button>
+    <button class="nav-btn" data-view-btn="all" onclick="switchView('all')">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h4M9 11V4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2h-8"/></svg></span>
+      <span class="label">সব পরীক্ষা</span>
+    </button>
+  </nav>
+
+  <div class="nav-section-label">ফিল্টার</div>
+  <div class="filter-section">
+    <div class="filter-list" id="tagFilterList">
+      <div class="filter-empty">ট্যাগ যোগ করলে এখানে দেখা যাবে</div>
+    </div>
+  </div>
+
+  <div class="sidebar-spacer"></div>
+
+  <div class="nearest-card" id="nearestCard">
+    <div class="nearest-top">
+      <div class="nearest-ring" id="nearestRing"><span id="nearestDays">০</span></div>
+      <div>
+        <div class="nearest-label">নিকটতম পরীক্ষা</div>
+      </div>
+    </div>
+    <div class="nearest-title" id="nearestTitle">—</div>
+    <div class="nearest-date" id="nearestDate">—</div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div>
+      <h1 id="greetingText">সুপ্রভাত 👋</h1>
+      <p id="todayText">আজ, ১৬ আগস্ট ২০২৬</p>
+    </div>
+    <button class="add-btn" onclick="openModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      <span id="addBtnLabelEl">নতুন পরীক্ষা যোগ করুন</span>
+    </button>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-top">
+        <div class="stat-icon purple">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5-10-5Z"/><path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/></svg>
+        </div>
+      </div>
+      <div class="stat-value" id="statTotal">০</div>
+      <div class="stat-label" id="statTotalLabelEl">মোট পরীক্ষা</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-top">
+        <div class="stat-icon orange">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        </div>
+      </div>
+      <div class="stat-value" id="statSoon">০</div>
+      <div class="stat-label" id="statSoonLabelEl">৭ দিনের মধ্যে</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-top">
+        <div class="stat-icon teal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        </div>
+      </div>
+      <div class="stat-value" id="statMonth">০</div>
+      <div class="stat-label" id="statMonthLabelEl">এই মাসে</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-top">
+        <div class="stat-icon red">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+        </div>
+      </div>
+      <div class="stat-value" id="statPast">০</div>
+      <div class="stat-label" id="statPastLabelEl">সমাপ্ত পরীক্ষা</div>
+    </div>
+  </div>
+
+  <!-- CONTENT GRID -->
+  <div class="content-grid">
+    <!-- CALENDAR -->
+    <div class="calendar-card" id="calendarCard">
+      <div class="cal-head">
+        <h2>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          <span id="calHeadingEl">ক্যালেন্ডার</span>
+        </h2>
+        <div class="cal-nav">
+          <button onclick="changeMonth(-1)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <span class="cal-month-label" id="calMonthLabel">আগস্ট ২০২৬</span>
+          <button onclick="changeMonth(1)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="weekdays">
+        <span>রবি</span><span>সোম</span><span>মঙ্গল</span><span>বুধ</span><span>বৃহঃ</span><span>শুক্র</span><span>শনি</span>
+      </div>
+      <div class="days-grid" id="daysGrid"></div>
+      <div class="cal-legend">
+        <span class="dotwrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5-10-5Z"/><path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/></svg></span>
+        এই তারিখে পরীক্ষা আছে — ক্লিক করে দেখুন
+      </div>
+      <button class="clear-filter" id="clearFilterBtn" onclick="clearDateFilter()">✕ তারিখ ফিল্টার সরান — সব পরীক্ষা দেখুন</button>
+    </div>
+
+    <!-- EVENTS -->
+    <div class="events-panel" id="eventsCard">
+      <div class="events-head">
+        <h2 id="eventsHeading">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h4M9 11V4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2h-8"/></svg>
+          <span id="eventsHeadingText">আসন্ন পরীক্ষাসমূহ</span>
+        </h2>
+        <span class="filter-chip" id="filterChip">📅 ফিল্টার করা হয়েছে</span>
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" id="searchInput" placeholder="পরীক্ষার নাম খুঁজুন..." oninput="renderEvents()">
+        </div>
+      </div>
+      <div id="eventsBody"></div>
+    </div>
+  </div>
+</main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle">নতুন পরীক্ষা যোগ করুন</h3>
+      <button class="modal-close" onclick="closeModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="examForm" onsubmit="return saveEvent(event)">
+      <input type="hidden" id="eventId">
+      <div class="field">
+        <label>পরীক্ষার নাম <span class="req">*</span></label>
+        <input type="text" id="fName" placeholder="যেমনঃ ঢাকা বিশ্ববিদ্যালয় ভর্তি পরীক্ষা (ক ইউনিট)" required>
+      </div>
+      <div class="field">
+        <label>ট্যাগ / প্রতিষ্ঠান</label>
+        <div class="tag-color-row">
+          <input type="text" id="fTag" placeholder="যেমনঃ ঢাবি, বুয়েট, মেডিকেল" oninput="onTagInputChange()">
+          <input type="color" id="fTagColor" title="ট্যাগের রঙ নির্বাচন করুন" oninput="onTagColorTouched()">
+        </div>
+        <div class="field-hint">সাইডবারে এই নাম অনুযায়ী রঙিন ফিল্টার তৈরি হবে — পাশের বৃত্তে ক্লিক করে ট্যাগের রঙ বদলাতে পারবেন</div>
+      </div>
+      <div class="field">
+        <label>বিস্তারিত / বিষয়</label>
+        <textarea id="fDetails" placeholder="যেমনঃ বিজ্ঞান অনুষদ, কেন্দ্রঃ কার্জন হল, প্রবেশপত্র সাথে আনতে হবে"></textarea>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>তারিখ <span class="req">*</span></label>
+          <input type="date" id="fDate" required>
+        </div>
+        <div class="field">
+          <label>সময়</label>
+          <input type="time" id="fTime">
+        </div>
+      </div>
+      <div class="field">
+        <label>সার্কুলার লিংক (ঐচ্ছিক)</label>
+        <input type="url" id="fLink" placeholder="https://example.com/circular.pdf">
+        <div class="field-hint">ভর্তি বিজ্ঞপ্তি বা সার্কুলারের লিংক দিলে কার্ডে একটি বাটন দেখাবে</div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeModal()">বাতিল</button>
+        <button type="submit" class="btn-save" id="saveBtnLabel">সংরক্ষণ করুন</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>টেক্সট সেটিংস</h3>
+      <button class="modal-close" onclick="closeSettingsModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="settingsForm" onsubmit="return saveSettings(event)">
+      <div class="settings-section-label">থিম রঙ</div>
+      <div class="field">
+        <label>অ্যাপের প্রধান রঙ</label>
+        <div class="color-field-row">
+          <input type="color" id="setPrimaryColor" oninput="applyPrimaryColor(this.value)">
+          <div class="color-swatches" id="colorSwatches"></div>
+        </div>
+        <div class="field-hint">বাটন, হাইলাইট ও আইকনের রঙ এখান থেকে বদলাতে পারবেন</div>
+      </div>
+
+      <div class="settings-section-label">ব্র্যান্ড</div>
+      <div class="field">
+        <label>অ্যাপের নাম</label>
+        <input type="text" id="setBrandTitle" maxlength="40">
+      </div>
+      <div class="field">
+        <label>সাবটাইটেল</label>
+        <input type="text" id="setBrandSubtitle" maxlength="60">
+      </div>
+      <div class="field">
+        <label>ব্রাউজার ট্যাব টাইটেল</label>
+        <input type="text" id="setPageTitle" maxlength="80">
+      </div>
+
+      <div class="settings-section-label">বাটন ও শিরোনাম</div>
+      <div class="field">
+        <label>"নতুন পরীক্ষা যোগ করুন" বাটনের লেখা</label>
+        <input type="text" id="setAddBtnLabel" maxlength="40">
+      </div>
+      <div class="field">
+        <label>ক্যালেন্ডার কার্ডের শিরোনাম</label>
+        <input type="text" id="setCalHeading" maxlength="40">
+      </div>
+
+      <div class="settings-section-label">পরিসংখ্যান কার্ডের লেবেল</div>
+      <div class="field-row">
+        <div class="field">
+          <label>মোট পরীক্ষা</label>
+          <input type="text" id="setStatTotal" maxlength="30">
+        </div>
+        <div class="field">
+          <label>৭ দিনের মধ্যে</label>
+          <input type="text" id="setStatSoon" maxlength="30">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>এই মাসে</label>
+          <input type="text" id="setStatMonth" maxlength="30">
+        </div>
+        <div class="field">
+          <label>সমাপ্ত পরীক্ষা</label>
+          <input type="text" id="setStatPast" maxlength="30">
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="resetSettings()">ডিফল্টে ফিরুন</button>
+        <button type="submit" class="btn-save">সংরক্ষণ করুন</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+  <span id="toastText">সংরক্ষিত হয়েছে</span>
+</div>
+
+<script>
+/* ================= DATA ================= */
+const STORAGE_KEY = 'examTrackerEvents_v2';
+const SETTINGS_KEY = 'examTrackerSettings_v1';
+const TAG_COLORS_KEY = 'examTrackerTagColors_v1';
+
+/* Safe storage wrapper — some browsers/preview frames block localStorage
+   (private browsing, sandboxed iframes, file:// restrictions). Without this,
+   the very first line below would throw and the whole script — including
+   openModal() — would never load, which is why "Add Exam" could do nothing. */
+const memoryStore = {};
+const safeStorage = {
+  getItem(key){
+    try { return localStorage.getItem(key); }
+    catch(e){ return Object.prototype.hasOwnProperty.call(memoryStore, key) ? memoryStore[key] : null; }
+  },
+  setItem(key, value){
+    try { localStorage.setItem(key, value); }
+    catch(e){ memoryStore[key] = value; }
+  }
+};
+
+function loadEventsCache(){
+  try {
+    const raw = safeStorage.getItem(STORAGE_KEY);
+    if(raw) return JSON.parse(raw);
+  } catch(e){ /* corrupted data — start fresh */ }
+  return [];
+}
+
+let events = loadEventsCache();
+
+let currentCal = new Date();
+currentCal.setDate(1);
+let selectedDate = null; // 'YYYY-MM-DD'
+let editingId = null;
+let currentView = 'dashboard';
+let tagFilter = null;
+
+/* ================= ADMIN AUTH ================= */
+const ADMIN_PW_KEY = 'ng_admin_pw';
+let adminPassword = null;
+try { adminPassword = sessionStorage.getItem(ADMIN_PW_KEY); } catch(e){ /* ignore */ }
+
+/* ================= SERVER SYNC =================
+   All data (events, text settings, tag colors) lives centrally via a
+   Netlify Function backed by Netlify Blobs, so every visitor sees the
+   same data. Reading is public; writing requires the admin password
+   (set as the ADMIN_PASSWORD environment variable on Netlify). */
+const API_URL = '/.netlify/functions/data';
+
+async function persistState(successMsg){
+  safeStorage.setItem(STORAGE_KEY, JSON.stringify(events));
+  safeStorage.setItem(SETTINGS_KEY, JSON.stringify(siteText));
+  safeStorage.setItem(TAG_COLORS_KEY, JSON.stringify(tagColors));
+
+  if(!adminPassword){
+    const pw = window.prompt('পরিবর্তনটি সবার জন্য প্রকাশ করতে অ্যাডমিন পাসওয়ার্ড দিন:');
+    if(!pw){
+      showToast('⚠️ পাবলিশ হয়নি — শুধু আপনার ব্রাউজারে সংরক্ষিত হয়েছে');
+      return;
+    }
+    adminPassword = pw;
+    try { sessionStorage.setItem(ADMIN_PW_KEY, pw); } catch(e){ /* ignore */ }
+  }
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminPassword },
+      body: JSON.stringify({ events, siteText, tagColors })
+    });
+    if(res.status === 401){
+      adminPassword = null;
+      try { sessionStorage.removeItem(ADMIN_PW_KEY); } catch(e){ /* ignore */ }
+      showToast('❌ ভুল পাসওয়ার্ড — পাবলিশ হয়নি, আবার চেষ্টা করুন');
+      return;
+    }
+    if(!res.ok) throw new Error('bad status ' + res.status);
+    showToast(successMsg || '✅ পরিবর্তন সবার জন্য পাবলিশ হয়েছে');
+  } catch(e){
+    showToast('⚠️ নেটওয়ার্ক সমস্যা — পরিবর্তন পাবলিশ হয়নি, পরে আবার চেষ্টা করুন');
+  }
+}
+
+async function fetchRemoteState(){
+  try {
+    const res = await fetch(API_URL);
+    if(!res.ok) throw new Error('bad status ' + res.status);
+    const data = await res.json();
+    events = Array.isArray(data.events) ? data.events : [];
+    siteText = Object.assign({}, DEFAULT_TEXT, data.siteText || {});
+    tagColors = (data.tagColors && typeof data.tagColors === 'object') ? data.tagColors : {};
+    safeStorage.setItem(STORAGE_KEY, JSON.stringify(events));
+    safeStorage.setItem(SETTINGS_KEY, JSON.stringify(siteText));
+    safeStorage.setItem(TAG_COLORS_KEY, JSON.stringify(tagColors));
+    applyTexts();
+    renderAll();
+  } catch(e){
+    /* offline, or function not deployed yet — silently keep local cache */
+  }
+}
+
+/* ================= EDITABLE UI TEXT (settings) ================= */
+const DEFAULT_TEXT = {
+  brandTitle: 'NextGate',
+  brandSubtitle: 'পরীক্ষা ট্র্যাকার',
+  pageTitle: 'NextGate — পরীক্ষা ট্র্যাকার',
+  addBtnLabel: 'নতুন পরীক্ষা যোগ করুন',
+  calHeading: 'ক্যালেন্ডার',
+  eventsHeadingDashboard: 'আসন্ন পরীক্ষাসমূহ',
+  eventsHeadingAll: 'সব পরীক্ষা',
+  eventsHeadingCalNoDate: 'একটি তারিখ নির্বাচন করুন',
+  eventsHeadingCalDate: 'নির্বাচিত দিনের পরীক্ষা',
+  statTotalLabel: 'মোট পরীক্ষা',
+  statSoonLabel: '৭ দিনের মধ্যে',
+  statMonthLabel: 'এই মাসে',
+  statPastLabel: 'সমাপ্ত পরীক্ষা',
+  primaryColor: '#D9333F'
+};
+
+function loadTexts(){
+  try {
+    const raw = safeStorage.getItem(SETTINGS_KEY);
+    if(raw) return Object.assign({}, DEFAULT_TEXT, JSON.parse(raw));
+  } catch(e){ /* ignore corrupted settings */ }
+  return Object.assign({}, DEFAULT_TEXT);
+}
+let siteText = loadTexts();
+function saveTexts(){
+  safeStorage.setItem(SETTINGS_KEY, JSON.stringify(siteText));
+}
+
+/* ---- custom tag colors (per-tag override) ---- */
+function loadTagColors(){
+  try {
+    const raw = safeStorage.getItem(TAG_COLORS_KEY);
+    if(raw) return JSON.parse(raw);
+  } catch(e){ /* ignore corrupted data */ }
+  return {};
+}
+let tagColors = loadTagColors();
+function saveTagColors(){
+  safeStorage.setItem(TAG_COLORS_KEY, JSON.stringify(tagColors));
+}
+
+/* ---- color helpers ---- */
+function hexToRgbStr(hex){
+  const num = parseInt((hex||'').replace('#',''), 16);
+  if(isNaN(num)) return '217,51,63';
+  return `${(num>>16)&255},${(num>>8)&255},${num&255}`;
+}
+function tintColor(hex, percent){
+  const num = parseInt((hex||'').replace('#',''), 16);
+  if(isNaN(num)) return hex;
+  let r=(num>>16)&255, g=(num>>8)&255, b=num&255;
+  r = Math.round(r + (255-r)*percent/100);
+  g = Math.round(g + (255-g)*percent/100);
+  b = Math.round(b + (255-b)*percent/100);
+  return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
+}
+function shadeColor(hex, percent){
+  const num = parseInt((hex||'').replace('#',''), 16);
+  if(isNaN(num)) return hex;
+  let r=(num>>16)&255, g=(num>>8)&255, b=num&255;
+  r = Math.round(r*(1-percent/100));
+  g = Math.round(g*(1-percent/100));
+  b = Math.round(b*(1-percent/100));
+  return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
+}
+function applyPrimaryColor(hex){
+  if(!/^#[0-9a-fA-F]{6}$/.test(hex || '')) hex = DEFAULT_TEXT.primaryColor;
+  const root = document.documentElement.style;
+  root.setProperty('--primary', hex);
+  root.setProperty('--primary-dark', shadeColor(hex, 22));
+  root.setProperty('--primary-light', tintColor(hex, 88));
+  root.setProperty('--primary-rgb', hexToRgbStr(hex));
+}
+const THEME_PRESETS = ['#D9333F','#3B82C4','#4CAF7D','#9B6BCE','#E8935B','#3FB6A8','#E667A6','#221F3D'];
+
+function updateEventsHeading(){
+  const headingEl = document.getElementById('eventsHeadingText');
+  if(!headingEl) return;
+  if(currentView === 'all'){
+    headingEl.textContent = siteText.eventsHeadingAll;
+  } else if(currentView === 'calendar'){
+    headingEl.textContent = selectedDate ? siteText.eventsHeadingCalDate : siteText.eventsHeadingCalNoDate;
+  } else {
+    headingEl.textContent = siteText.eventsHeadingDashboard;
+  }
+}
+
+function applyTexts(){
+  applyPrimaryColor(siteText.primaryColor);
+  document.title = siteText.pageTitle;
+  document.getElementById('brandTitleEl').textContent = siteText.brandTitle;
+  document.getElementById('brandSubtitleEl').textContent = siteText.brandSubtitle;
+  document.getElementById('mobileTopbarTitle').textContent = siteText.brandTitle;
+  document.getElementById('addBtnLabelEl').textContent = siteText.addBtnLabel;
+  document.getElementById('calHeadingEl').textContent = siteText.calHeading;
+  document.getElementById('statTotalLabelEl').textContent = siteText.statTotalLabel;
+  document.getElementById('statSoonLabelEl').textContent = siteText.statSoonLabel;
+  document.getElementById('statMonthLabelEl').textContent = siteText.statMonthLabel;
+  document.getElementById('statPastLabelEl').textContent = siteText.statPastLabel;
+  updateEventsHeading();
+}
+
+function renderColorSwatches(){
+  const wrap = document.getElementById('colorSwatches');
+  if(!wrap) return;
+  wrap.innerHTML = THEME_PRESETS.map(c =>
+    `<button type="button" class="color-swatch" style="background:${c}" title="${c}" onclick="pickPresetColor('${c}')"></button>`
+  ).join('');
+}
+function pickPresetColor(hex){
+  document.getElementById('setPrimaryColor').value = hex;
+  applyPrimaryColor(hex);
+}
+
+function openSettingsModal(){
+  closeSidebar();
+  document.getElementById('setPrimaryColor').value = siteText.primaryColor || DEFAULT_TEXT.primaryColor;
+  renderColorSwatches();
+  document.getElementById('setBrandTitle').value = siteText.brandTitle;
+  document.getElementById('setBrandSubtitle').value = siteText.brandSubtitle;
+  document.getElementById('setPageTitle').value = siteText.pageTitle;
+  document.getElementById('setAddBtnLabel').value = siteText.addBtnLabel;
+  document.getElementById('setCalHeading').value = siteText.calHeading;
+  document.getElementById('setStatTotal').value = siteText.statTotalLabel;
+  document.getElementById('setStatSoon').value = siteText.statSoonLabel;
+  document.getElementById('setStatMonth').value = siteText.statMonthLabel;
+  document.getElementById('setStatPast').value = siteText.statPastLabel;
+  document.getElementById('settingsOverlay').classList.add('open');
+}
+function closeSettingsModal(){
+  document.getElementById('settingsOverlay').classList.remove('open');
+  applyPrimaryColor(siteText.primaryColor);
+}
+document.getElementById('settingsOverlay').addEventListener('click', function(e){
+  if(e.target === this) closeSettingsModal();
+});
+
+function saveSettings(e){
+  e.preventDefault();
+  siteText.primaryColor = document.getElementById('setPrimaryColor').value || DEFAULT_TEXT.primaryColor;
+  siteText.brandTitle = document.getElementById('setBrandTitle').value.trim() || DEFAULT_TEXT.brandTitle;
+  siteText.brandSubtitle = document.getElementById('setBrandSubtitle').value.trim() || DEFAULT_TEXT.brandSubtitle;
+  siteText.pageTitle = document.getElementById('setPageTitle').value.trim() || DEFAULT_TEXT.pageTitle;
+  siteText.addBtnLabel = document.getElementById('setAddBtnLabel').value.trim() || DEFAULT_TEXT.addBtnLabel;
+  siteText.calHeading = document.getElementById('setCalHeading').value.trim() || DEFAULT_TEXT.calHeading;
+  siteText.statTotalLabel = document.getElementById('setStatTotal').value.trim() || DEFAULT_TEXT.statTotalLabel;
+  siteText.statSoonLabel = document.getElementById('setStatSoon').value.trim() || DEFAULT_TEXT.statSoonLabel;
+  siteText.statMonthLabel = document.getElementById('setStatMonth').value.trim() || DEFAULT_TEXT.statMonthLabel;
+  siteText.statPastLabel = document.getElementById('setStatPast').value.trim() || DEFAULT_TEXT.statPastLabel;
+  applyTexts();
+  closeSettingsModal();
+  persistState('✅ সেটিংস সবার জন্য পাবলিশ হয়েছে');
+  return false;
+}
+function resetSettings(){
+  if(!confirm('সব টেক্সট ডিফল্টে ফিরিয়ে আনতে চান?')) return;
+  siteText = Object.assign({}, DEFAULT_TEXT);
+  applyTexts();
+  closeSettingsModal();
+  persistState('✅ ডিফল্ট টেক্সট পুনরুদ্ধার ও পাবলিশ হয়েছে');
+}
+
+/* ================= BANGLA HELPERS ================= */
+const banglaDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+function toBn(num){
+  return String(num).replace(/[0-9]/g, d => banglaDigits[d]);
+}
+const bnMonths = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+const bnMonthsShort = ['জানু','ফেব্রু','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগ','সেপ্ট','অক্টো','নভে','ডিসে'];
+const bnWeekdaysShort = ['রবি','সোম','মঙ্গল','বুধ','বৃহঃ','শুক্র','শনি'];
+
+function fmtDate(dateStr){
+  const d = new Date(dateStr + 'T00:00:00');
+  return `${toBn(d.getDate())} ${bnMonths[d.getMonth()]}, ${toBn(d.getFullYear())}`;
+}
+function fmtDateShort(dateStr){
+  const d = new Date(dateStr + 'T00:00:00');
+  return `${toBn(d.getDate())} ${bnMonthsShort[d.getMonth()]}, ${toBn(d.getFullYear())}`;
+}
+function fmtTime(t){
+  if(!t) return '';
+  let [h,m] = t.split(':').map(Number);
+  const period = h >= 12 ? 'PM' : 'AM';
+  let h12 = h % 12; if(h12===0) h12 = 12;
+  return `${toBn(h12)}:${toBn(String(m).padStart(2,'0'))} ${period}`;
+}
+
+/* ================= TAG COLORS ================= */
+const TAG_PALETTE = ['#3B82C4','#E8935B','#4CAF7D','#9B6BCE','#D9333F','#3FB6A8','#E667A6','#C9A227'];
+function tagColor(tag){
+  if(!tag) return '#B4B2C6';
+  if(tagColors[tag]) return tagColors[tag];
+  let hash = 0;
+  for(let i=0;i<tag.length;i++){ hash = tag.charCodeAt(i) + ((hash << 5) - hash); }
+  return TAG_PALETTE[Math.abs(hash) % TAG_PALETTE.length];
+}
+
+/* ================= GREETING ================= */
+function setGreeting(){
+  const h = new Date().getHours();
+  let g = 'শুভ সকাল';
+  if(h>=12 && h<16) g = 'শুভ অপরাহ্ণ';
+  else if(h>=16 && h<19) g = 'শুভ বিকাল';
+  else if(h>=19 || h<5) g = 'শুভ সন্ধ্যা';
+  document.getElementById('greetingText').textContent = g + ' 👋';
+
+  const today = new Date();
+  document.getElementById('todayText').textContent =
+    `আজ, ${toBn(today.getDate())} ${bnMonths[today.getMonth()]} ${toBn(today.getFullYear())} — ${bnWeekdaysShort[today.getDay()]}বার`;
+}
+
+/* ================= MOBILE SIDEBAR ================= */
+function toggleSidebar(){
+  document.getElementById('sidebarEl').classList.toggle('open');
+  document.getElementById('sidebarBackdrop').classList.toggle('show');
+}
+function closeSidebar(){
+  document.getElementById('sidebarEl').classList.remove('open');
+  document.getElementById('sidebarBackdrop').classList.remove('show');
+}
+
+/* ================= VIEW SWITCHING ================= */
+function switchView(view){
+  closeSidebar();
+  currentView = view;
+  document.body.dataset.view = view;
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.viewBtn === view);
+  });
+
+  updateEventsHeading();
+
+  renderCalendar();
+  renderEvents();
+}
+
+/* ================= CALENDAR RENDER ================= */
+function changeMonth(delta){
+  currentCal.setMonth(currentCal.getMonth() + delta);
+  renderCalendar();
+}
+
+function dateKey(y,m,d){
+  return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+
+function renderCalendar(){
+  const y = currentCal.getFullYear();
+  const m = currentCal.getMonth();
+  document.getElementById('calMonthLabel').textContent = `${bnMonths[m]} ${toBn(y)}`;
+
+  const firstDay = new Date(y, m, 1).getDay();
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const daysInPrevMonth = new Date(y, m, 0).getDate();
+
+  const eventDates = new Set(events.map(e => e.date));
+
+  const todayKey = dateKey(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+
+  let html = '';
+  for(let i = firstDay - 1; i >= 0; i--){
+    html += `<div class="day-cell muted">${toBn(daysInPrevMonth - i)}</div>`;
+  }
+  for(let d = 1; d <= daysInMonth; d++){
+    const key = dateKey(y,m,d);
+    const hasEvent = eventDates.has(key);
+    const isToday = key === todayKey;
+    const isSelected = key === selectedDate;
+    let cls = 'day-cell';
+    if(isToday) cls += ' today';
+    if(isSelected) cls += ' selected';
+    if(hasEvent) cls += ' has-event';
+    html += `<div class="${cls}" onclick="selectDate('${key}')" title="${hasEvent ? 'এই তারিখে পরীক্ষা আছে' : ''}">
+      <span>${toBn(d)}</span>
+      ${hasEvent ? '<span class="exam-mark">🎓</span>' : ''}
+    </div>`;
+  }
+  const totalCells = firstDay + daysInMonth;
+  const remaining = (7 - (totalCells % 7)) % 7;
+  for(let d = 1; d <= remaining; d++){
+    html += `<div class="day-cell muted">${toBn(d)}</div>`;
+  }
+
+  document.getElementById('daysGrid').innerHTML = html;
+}
+
+function selectDate(key){
+  selectedDate = (selectedDate === key) ? null : key;
+  renderCalendar();
+  document.getElementById('clearFilterBtn').classList.toggle('show', !!selectedDate);
+  document.getElementById('filterChip').classList.toggle('show', !!selectedDate && currentView !== 'all');
+  if(selectedDate){
+    document.getElementById('filterChip').textContent = `📅 ${fmtDate(selectedDate)} এর পরীক্ষা`;
+  }
+  updateEventsHeading();
+  renderEvents();
+}
+function clearDateFilter(){
+  selectedDate = null;
+  renderCalendar();
+  renderEvents();
+  document.getElementById('clearFilterBtn').classList.remove('show');
+  document.getElementById('filterChip').classList.remove('show');
+  updateEventsHeading();
+}
+
+/* ================= TAG FILTER SIDEBAR ================= */
+function renderTagFilters(){
+  const counts = {};
+  events.forEach(e => {
+    const tag = (e.tag || '').trim();
+    if(!tag) return;
+    counts[tag] = (counts[tag] || 0) + 1;
+  });
+  const tags = Object.keys(counts);
+  const container = document.getElementById('tagFilterList');
+
+  if(tags.length === 0){
+    container.innerHTML = '<div class="filter-empty">ট্যাগ যোগ করলে এখানে দেখা যাবে</div>';
+    return;
+  }
+
+  container.innerHTML = tags.map(tag => {
+    const active = tagFilter === tag;
+    return `<button class="filter-row ${active ? 'active' : ''}" onclick="toggleTagFilter('${escapeAttr(tag)}')">
+      <span class="filter-dot" style="background:${tagColor(tag)}"></span>
+      <span class="fname">${escapeHtml(tag)}</span>
+      <span class="fcount">${toBn(counts[tag])}</span>
+    </button>`;
+  }).join('');
+}
+
+function toggleTagFilter(tag){
+  tagFilter = (tagFilter === tag) ? null : tag;
+  renderTagFilters();
+  renderEvents();
+}
+
+/* ================= COUNTDOWN ================= */
+function getCountdownInfo(dateStr, timeStr){
+  const now = new Date();
+  const target = new Date(dateStr + 'T' + (timeStr || '23:59') + ':00');
+  const diffMs = target - now;
+  const diffDays = Math.ceil(diffMs / (1000*60*60*24));
+
+  if(diffMs < 0){
+    return { text: 'পরীক্ষা সম্পন্ন হয়েছে', cls: 'past', isPast: true, days: 0 };
+  }
+  if(diffDays === 0){
+    return { text: 'আজই পরীক্ষা!', cls: 'soon', isPast: false, days: 0 };
+  }
+  if(diffDays === 1){
+    return { text: 'আগামীকাল', cls: 'soon', isPast: false, days: 1 };
+  }
+  if(diffDays <= 7){
+    return { text: `আর ${toBn(diffDays)} দিন বাকি`, cls: 'soon', isPast: false, days: diffDays };
+  }
+  return { text: `আর ${toBn(diffDays)} দিন বাকি`, cls: 'normal', isPast: false, days: diffDays };
+}
+
+/* ================= NEAREST EXAM WIDGET ================= */
+function renderNearest(){
+  const now = new Date();
+  const upcoming = events
+    .filter(e => new Date(e.date + 'T' + (e.time || '23:59') + ':00') >= now)
+    .sort((a,b) => (a.date + (a.time||'99:99')).localeCompare(b.date + (b.time||'99:99')));
+
+  const card = document.getElementById('nearestCard');
+  if(upcoming.length === 0){
+    card.classList.remove('show');
+    return;
+  }
+  card.classList.add('show');
+  const ev = upcoming[0];
+  const cd = getCountdownInfo(ev.date, ev.time);
+  const ring = document.getElementById('nearestRing');
+  ring.classList.toggle('normal', cd.cls === 'normal');
+  document.getElementById('nearestDays').textContent = toBn(cd.days);
+  document.getElementById('nearestTitle').textContent = ev.name;
+  document.getElementById('nearestDate').textContent = `${fmtDateShort(ev.date)} · ${cd.text}`;
+}
+
+/* ================= ICONS ================= */
+const ICON_CLOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>';
+const ICON_CAL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>';
+const ICON_LINK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1-1"/></svg>';
+const ICON_EDIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+const ICON_TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z"/></svg>';
+const ICON_GRAD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5-10-5Z"/><path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/></svg>';
+
+/* ================= EVENT CARD HTML ================= */
+function eventCardHTML(ev){
+  const cd = getCountdownInfo(ev.date, ev.time);
+  const linkHtml = ev.link
+    ? `<a class="circular-link" href="${escapeAttr(ev.link)}" target="_blank" rel="noopener noreferrer">${ICON_LINK} সার্কুলার দেখুন</a>`
+    : `<span class="no-link">লিংক যুক্ত নেই</span>`;
+  const tagHtml = ev.tag
+    ? `<span class="ev-tag" style="background:${tagColor(ev.tag)}22; color:${tagColor(ev.tag)}"><span class="tagdot" style="background:${tagColor(ev.tag)}"></span>${escapeHtml(ev.tag)}</span>`
+    : '';
+
+  return `
+    <div class="event-card ${cd.isPast ? 'past' : ''}">
+      <div class="ev-top">
+        <div class="ev-icon">${ICON_GRAD}</div>
+        <div class="ev-actions">
+          <button title="সম্পাদনা করুন" onclick="editEvent('${ev.id}')">${ICON_EDIT}</button>
+          <button class="del" title="মুছে ফেলুন" onclick="deleteEvent('${ev.id}')">${ICON_TRASH}</button>
+        </div>
+      </div>
+      <div>
+        ${tagHtml}
+        <div class="ev-name" style="${tagHtml ? 'margin-top:8px;' : ''}">${escapeHtml(ev.name)}</div>
+        ${ev.details ? `<div class="ev-details">${escapeHtml(ev.details)}</div>` : ''}
+      </div>
+      <div class="ev-meta">
+        <span class="meta-date">${ICON_CAL} ${fmtDate(ev.date)}</span>
+        ${ev.time ? `<span class="meta-time">${ICON_CLOCK} ${fmtTime(ev.time)}</span>` : ''}
+      </div>
+      <div class="ev-bottom">
+        <span class="countdown ${cd.cls}">${ICON_CLOCK} ${cd.text}</span>
+        ${linkHtml}
+      </div>
+    </div>`;
+}
+
+function emptyStateHTML(hasAnyEvents, customTitle, customMsg){
+  return `
+    <div class="empty-state">
+      ${ICON_GRAD}
+      <h3>${customTitle}</h3>
+      <p>${customMsg}</p>
+    </div>`;
+}
+
+/* ================= EVENTS LIST RENDER ================= */
+function renderEvents(){
+  const search = document.getElementById('searchInput').value.trim().toLowerCase();
+  let list = [...events];
+
+  if(tagFilter){
+    list = list.filter(e => (e.tag || '') === tagFilter);
+  }
+  if(search){
+    list = list.filter(e => (e.name || '').toLowerCase().includes(search) || (e.details||'').toLowerCase().includes(search));
+  }
+
+  const body = document.getElementById('eventsBody');
+
+  if(currentView === 'calendar'){
+    if(!selectedDate){
+      body.innerHTML = `<div class="event-cards">${emptyStateHTML(events.length>0, 'একটি তারিখ নির্বাচন করুন', 'ক্যালেন্ডারে যেকোনো তারিখে ক্লিক করলে সেদিনের পরীক্ষাগুলো এখানে দেখা যাবে')}</div>`;
+      return;
+    }
+    let dayList = list.filter(e => e.date === selectedDate);
+    dayList.sort((a,b) => (a.time||'99:99').localeCompare(b.time||'99:99'));
+    if(dayList.length === 0){
+      body.innerHTML = `<div class="event-cards">${emptyStateHTML(false, 'এই তারিখে কোনো পরীক্ষা নেই', '"নতুন পরীক্ষা যোগ করুন" বাটনে ক্লিক করে এই দিনে একটি পরীক্ষা যোগ করুন')}</div>`;
+      return;
+    }
+    body.innerHTML = `<div class="event-cards">${dayList.map(eventCardHTML).join('')}</div>`;
+    return;
+  }
+
+  if(currentView === 'all'){
+    list.sort((a,b) => (a.date + (a.time||'99:99')).localeCompare(b.date + (b.time||'99:99')));
+    const now = new Date();
+    const upcoming = list.filter(e => new Date(e.date + 'T' + (e.time||'23:59') + ':00') >= now);
+    const past = list.filter(e => new Date(e.date + 'T' + (e.time||'23:59') + ':00') < now);
+
+    if(list.length === 0){
+      body.innerHTML = `<div class="event-cards">${emptyStateHTML(events.length>0, events.length === 0 ? 'এখনো কোনো পরীক্ষা যোগ করা হয়নি' : 'কোনো পরীক্ষা পাওয়া যায়নি', events.length === 0 ? '"নতুন পরীক্ষা যোগ করুন" বাটনে ক্লিক করে শুরু করুন' : 'অন্য ট্যাগ বা নাম দিয়ে খুঁজে দেখুন')}</div>`;
+      return;
+    }
+
+    let html = '';
+    if(upcoming.length){
+      html += `<div class="section-heading">🕐 আসন্ন (${toBn(upcoming.length)})</div><div class="event-cards">${upcoming.map(eventCardHTML).join('')}</div>`;
+    }
+    if(past.length){
+      html += `<div class="section-heading">✅ সমাপ্ত হয়েছে (${toBn(past.length)})</div><div class="event-cards">${past.map(eventCardHTML).join('')}</div>`;
+    }
+    body.innerHTML = html;
+    return;
+  }
+
+  // dashboard view
+  if(selectedDate){
+    list = list.filter(e => e.date === selectedDate);
+  }
+  list.sort((a,b) => (a.date + (a.time||'99:99')).localeCompare(b.date + (b.time||'99:99')));
+
+  if(list.length === 0){
+    body.innerHTML = `<div class="event-cards">${emptyStateHTML(events.length>0, events.length === 0 ? 'এখনো কোনো পরীক্ষা যোগ করা হয়নি' : 'কোনো পরীক্ষা পাওয়া যায়নি', events.length === 0 ? '"নতুন পরীক্ষা যোগ করুন" বাটনে ক্লিক করে শুরু করুন' : 'অন্য তারিখ, ট্যাগ বা নাম দিয়ে খুঁজে দেখুন')}</div>`;
+    return;
+  }
+  body.innerHTML = `<div class="event-cards">${list.map(eventCardHTML).join('')}</div>`;
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str || '';
+  return div.innerHTML;
+}
+function escapeAttr(str){
+  return (str || '').replace(/"/g, '&quot;');
+}
+
+/* ================= STATS ================= */
+function renderStats(){
+  const now = new Date();
+  document.getElementById('statTotal').textContent = toBn(events.length);
+
+  const soon = events.filter(e => {
+    const t = new Date(e.date + 'T' + (e.time || '23:59') + ':00');
+    const diff = (t - now) / (1000*60*60*24);
+    return diff >= 0 && diff <= 7;
+  }).length;
+  document.getElementById('statSoon').textContent = toBn(soon);
+
+  const thisMonth = events.filter(e => {
+    const d = new Date(e.date + 'T00:00:00');
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  }).length;
+  document.getElementById('statMonth').textContent = toBn(thisMonth);
+
+  const past = events.filter(e => {
+    const t = new Date(e.date + 'T' + (e.time || '23:59') + ':00');
+    return t < now;
+  }).length;
+  document.getElementById('statPast').textContent = toBn(past);
+}
+
+/* ================= MODAL / CRUD ================= */
+let tagColorTouched = false;
+function onTagColorTouched(){ tagColorTouched = true; }
+function onTagInputChange(){
+  if(tagColorTouched) return;
+  const tag = document.getElementById('fTag').value.trim();
+  document.getElementById('fTagColor').value = tagColor(tag);
+}
+
+function openModal(){
+  editingId = null;
+  document.getElementById('modalTitle').textContent = 'নতুন পরীক্ষা যোগ করুন';
+  document.getElementById('saveBtnLabel').textContent = 'সংরক্ষণ করুন';
+  document.getElementById('examForm').reset();
+  document.getElementById('eventId').value = '';
+  tagColorTouched = false;
+  document.getElementById('fTagColor').value = tagColor('');
+  if(selectedDate){ document.getElementById('fDate').value = selectedDate; }
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+document.getElementById('modalOverlay').addEventListener('click', function(e){
+  if(e.target === this) closeModal();
+});
+
+function editEvent(id){
+  const ev = events.find(e => e.id === id);
+  if(!ev) return;
+  editingId = id;
+  document.getElementById('modalTitle').textContent = 'পরীক্ষার তথ্য সম্পাদনা করুন';
+  document.getElementById('saveBtnLabel').textContent = 'আপডেট করুন';
+  document.getElementById('eventId').value = ev.id;
+  document.getElementById('fName').value = ev.name || '';
+  document.getElementById('fTag').value = ev.tag || '';
+  tagColorTouched = true;
+  document.getElementById('fTagColor').value = tagColor(ev.tag || '');
+  document.getElementById('fDetails').value = ev.details || '';
+  document.getElementById('fDate').value = ev.date || '';
+  document.getElementById('fTime').value = ev.time || '';
+  document.getElementById('fLink').value = ev.link || '';
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function deleteEvent(id){
+  const ev = events.find(e => e.id === id);
+  if(!ev) return;
+  if(!confirm(`আপনি কি নিশ্চিতভাবে "${ev.name}" পরীক্ষাটি মুছে ফেলতে চান?`)) return;
+  events = events.filter(e => e.id !== id);
+  renderAll();
+  persistState('✅ পরীক্ষাটি মুছে ফেলা হয়েছে ও পাবলিশ হয়েছে');
+}
+
+function saveEvent(e){
+  e.preventDefault();
+  const name = document.getElementById('fName').value.trim();
+  const tag = document.getElementById('fTag').value.trim();
+  const details = document.getElementById('fDetails').value.trim();
+  const date = document.getElementById('fDate').value;
+  const time = document.getElementById('fTime').value;
+  const link = document.getElementById('fLink').value.trim();
+  const tagColorVal = document.getElementById('fTagColor').value;
+
+  if(!name || !date){
+    showToast('অনুগ্রহ করে নাম ও তারিখ পূরণ করুন');
+    return false;
+  }
+
+  if(tag){
+    tagColors[tag] = tagColorVal;
+  }
+
+  if(editingId){
+    const idx = events.findIndex(ev => ev.id === editingId);
+    if(idx > -1){
+      events[idx] = { ...events[idx], name, tag, details, date, time, link };
+    }
+  } else {
+    events.push({
+      id: 'ev_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+      name, tag, details, date, time, link
+    });
+  }
+
+  const d = new Date(date + 'T00:00:00');
+  currentCal = new Date(d.getFullYear(), d.getMonth(), 1);
+
+  closeModal();
+  renderAll();
+  persistState(editingId ? '✅ পরীক্ষার তথ্য আপডেট ও পাবলিশ হয়েছে' : '✅ নতুন পরীক্ষা যোগ ও পাবলিশ হয়েছে');
+  return false;
+}
+
+/* ================= TOAST ================= */
+let toastTimer = null;
+function showToast(msg){
+  const toast = document.getElementById('toast');
+  document.getElementById('toastText').textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
+}
+
+/* ================= INIT ================= */
+function renderAll(){
+  renderCalendar();
+  renderEvents();
+  renderStats();
+  renderTagFilters();
+  renderNearest();
+}
+
+applyTexts();
+setGreeting();
+renderAll();
+fetchRemoteState();
+
+setInterval(() => { renderEvents(); renderNearest(); }, 60000);
+setInterval(fetchRemoteState, 45000);
+</script>
+</body>
+</html>
