@@ -1022,10 +1022,20 @@ async function persistState(successMsg){
       showToast('❌ ভুল পাসওয়ার্ড — পাবলিশ হয়নি, আবার চেষ্টা করুন');
       return;
     }
-    if(!res.ok) throw new Error('bad status ' + res.status);
+    if(!res.ok){
+      let detail = 'HTTP ' + res.status;
+      try {
+        const errBody = await res.json();
+        if(errBody && errBody.error) detail = errBody.error;
+      } catch(parseErr){ /* body wasn't JSON */ }
+      showToast('❌ সার্ভার এরর: ' + detail);
+      console.error('Publish failed:', detail);
+      return;
+    }
     showToast(successMsg || '✅ পরিবর্তন সবার জন্য পাবলিশ হয়েছে');
   } catch(e){
     showToast('⚠️ নেটওয়ার্ক সমস্যা — পরিবর্তন পাবলিশ হয়নি, পরে আবার চেষ্টা করুন');
+    console.error('Publish network error:', e);
   }
 }
 
