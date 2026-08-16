@@ -438,6 +438,19 @@
     display:none; align-items:center; gap:6px;
   }
   .filter-chip.show{ display:inline-flex; }
+  .ev-tabs{
+    display:flex; align-items:center; gap: 4px;
+    background: var(--bg); border-radius: 11px; padding: 4px;
+    flex-shrink: 0;
+  }
+  .ev-tab{
+    border:none; background:transparent; cursor:pointer;
+    font-family: inherit; font-size: 13.5px; font-weight:600; color: var(--text-muted);
+    padding: 7px 14px; border-radius: 8px; transition: all .15s ease; white-space:nowrap;
+  }
+  .ev-tab:hover{ color: var(--text); }
+  .ev-tab.active{ background: var(--primary); color:#fff; box-shadow: 0 4px 10px rgba(var(--primary-rgb),0.28); }
+  body[data-view="calendar"] .ev-tabs, body[data-view="all"] .ev-tabs{ display:none; }
   .search-wrap{
     position: relative; flex:1; min-width: 180px; max-width: 260px;
   }
@@ -655,6 +668,8 @@
     .events-head{ flex-direction:column; align-items:stretch; }
     .search-wrap{ max-width:none; }
     .filter-chip{ align-self:flex-start; }
+    .ev-tabs{ width:100%; }
+    .ev-tab{ flex:1; text-align:center; padding: 7px 8px; }
   }
   @media (max-width: 480px){
     body{ font-size: 14px; }
@@ -837,6 +852,11 @@
           <span id="eventsHeadingText">আসন্ন পরীক্ষাসমূহ</span>
         </h2>
         <span class="filter-chip" id="filterChip">📅 ফিল্টার করা হয়েছে</span>
+        <div class="ev-tabs" id="evTabs">
+          <button type="button" class="ev-tab active" data-filter="upcoming" onclick="setDashboardFilter('upcoming')">আসন্ন</button>
+          <button type="button" class="ev-tab" data-filter="past" onclick="setDashboardFilter('past')">সমাপ্ত</button>
+          <button type="button" class="ev-tab" data-filter="all" onclick="setDashboardFilter('all')">সব</button>
+        </div>
         <div class="search-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           <input type="text" id="searchInput" placeholder="পরীক্ষার নাম খুঁজুন..." oninput="renderEvents()">
@@ -1021,6 +1041,7 @@ let selectedDate = null; // 'YYYY-MM-DD'
 let editingId = null;
 let currentView = 'dashboard';
 let tagFilter = null;
+let dashboardFilter = 'upcoming'; // 'upcoming' | 'past' | 'all'
 
 /* ================= ADMIN AUTH ================= */
 const ADMIN_PW_KEY = 'ng_admin_pw';
@@ -1434,6 +1455,18 @@ function clearDateFilter(){
   updateEventsHeading();
 }
 
+function setDashboardFilter(f){
+  dashboardFilter = f;
+  document.querySelectorAll('.ev-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === f);
+  });
+  if(selectedDate){
+    clearDateFilter();
+  } else {
+    renderEvents();
+  }
+}
+
 /* ================= TAG FILTER SIDEBAR ================= */
 function renderTagFilters(){
   const counts = {};
@@ -1616,11 +1649,30 @@ function renderEvents(){
   // dashboard view
   if(selectedDate){
     list = list.filter(e => e.date === selectedDate);
+    list.sort((a,b) => (a.date + (a.time||'99:99')).localeCompare(b.date + (b.time||'99:99')));
+  } else {
+    const now = new Date();
+    if(dashboardFilter === 'upcoming'){
+      list = list.filter(e => new Date(e.date + 'T' + (e.time||'23:59') + ':00') >= now);
+      list.sort((a,b) => (a.date + (a.time||'99:99')).localeCompare(b.date + (b.time||'99:99')));
+    } else if(dashboardFilter === 'past'){
+      list = list.filter(e => new Date(e.date + 'T' + (e.time||'23:59') + ':00') < now);
+      list.sort((a,b) => (b.date + (b.time||'00:00')).localeCompare(a.date + (a.time||'00:00')));
+    } else {
+      list.sort((a,b) => (a.date + (a.time||'99:99')).localeCompare(b.date + (b.time||'99:99')));
+    }
   }
-  list.sort((a,b) => (a.date + (a.time||'99:99')).localeCompare(b.date + (b.time||'99:99')));
 
   if(list.length === 0){
-    body.innerHTML = `<div class="event-cards">${emptyStateHTML(events.length>0, events.length === 0 ? 'এখনো কোনো পরীক্ষা যোগ করা হয়নি' : 'কোনো পরীক্ষা পাওয়া যায়নি', events.length === 0 ? '"নতুন পরীক্ষা যোগ করুন" বাটনে ক্লিক করে শুরু করুন' : 'অন্য তারিখ, ট্যাগ বা নাম দিয়ে খুঁজে দেখুন')}</div>`;
+    const emptyTitleByFilter = {
+      upcoming: 'কোনো আসন্ন পরীক্ষা নেই',
+      past: 'কোনো সমাপ্ত পরীক্ষা নেই',
+      all: 'এখনো কোনো পরীক্ষা যোগ করা হয়নি'
+    };
+    const title = events.length === 0
+      ? 'এখনো কোনো পরীক্ষা যোগ করা হয়নি'
+      : (emptyTitleByFilter[dashboardFilter] || 'কোনো পরীক্ষা পাওয়া যায়নি');
+    body.innerHTML = `<div class="event-cards">${emptyStateHTML(events.length>0, title, events.length === 0 ? '"নতুন পরীক্ষা যোগ করুন" বাটনে ক্লিক করে শুরু করুন' : 'অন্য তারিখ, ট্যাগ বা নাম দিয়ে খুঁজে দেখুন')}</div>`;
     return;
   }
   body.innerHTML = `<div class="event-cards">${list.map(eventCardHTML).join('')}</div>`;
