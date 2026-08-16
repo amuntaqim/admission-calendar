@@ -291,13 +291,44 @@
     min-height: 0;
     overflow: hidden;
   }
-  body[data-view="calendar"] .content-grid,
   body[data-view="all"] .content-grid{
     grid-template-columns: 1fr;
   }
   body[data-view="all"] .calendar-card{ display: none; }
-  body[data-view="calendar"] .calendar-card{ max-width: 620px; width: 100%; margin: 0 auto; padding: 30px; }
-  body[data-view="calendar"] .day-cell{ font-size: 15.5px; }
+
+  /* Calendar view: calendar takes priority (wide), events for the
+     selected day sit beside it instead of a small centered box. */
+  body[data-view="calendar"] .content-grid{
+    grid-template-columns: 1.7fr 1fr;
+    align-items: start;
+  }
+  body[data-view="calendar"] .calendar-card{
+    max-width: none; width: 100%; margin: 0; padding: 26px;
+  }
+  body[data-view="calendar"] .events-panel{
+    max-height: 100%;
+  }
+  body[data-view="calendar"] .days-grid{ gap: 7px; }
+  body[data-view="calendar"] .day-cell{
+    aspect-ratio: auto;
+    min-height: 98px;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 8px 6px 6px;
+    font-size: 15px;
+  }
+  body[data-view="calendar"] .day-cell .daynum{ align-self:flex-start; }
+  body[data-view="calendar"] .day-cell .exam-mark{ display:none; }
+  body[data-view="calendar"] .day-cell .day-preview{
+    display:flex; flex-direction:column; gap:3px; width:100%; margin-top:4px;
+  }
+  body[data-view="calendar"] .day-cell .day-pill{
+    font-size: 10.5px; font-weight:600; padding: 2px 6px; border-radius: 6px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:left; line-height:1.5;
+  }
+  body[data-view="calendar"] .day-cell .day-pill.more{ background: var(--bg); color: var(--text-muted); }
+  body[data-view="calendar"] .day-cell.selected .day-pill{ background: rgba(255,255,255,0.25) !important; color:#fff !important; }
+  body[data-view="calendar"] .day-cell.selected .day-pill.more{ background: rgba(255,255,255,0.25) !important; }
 
   /* ---------- CALENDAR ---------- */
   .calendar-card{
@@ -511,7 +542,7 @@
   /* ---------- MODAL ---------- */
   .modal-overlay{
     position: fixed; inset:0; background: rgba(34,31,61,0.45);
-    display:none; align-items:center; justify-content:center; z-index: 100;
+    display:none; align-items:center; justify-content:center; z-index: 300;
     padding: 20px;
     backdrop-filter: blur(2px);
   }
@@ -573,7 +604,7 @@
   .toast{
     position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(20px);
     background: var(--text); color:#fff; padding: 13px 22px; border-radius: 12px;
-    font-size: 14.5px; font-weight:500; z-index: 200; opacity:0; pointer-events:none;
+    font-size: 14.5px; font-weight:500; z-index: 400; opacity:0; pointer-events:none;
     transition: all .25s ease; display:flex; align-items:center; gap:9px;
     box-shadow: 0 12px 30px rgba(0,0,0,0.25);
   }
@@ -581,8 +612,9 @@
   .toast svg{ width:16px; height:16px; color: #7CE0B8; flex-shrink:0; }
 
   @media (max-width: 980px){
-    .content-grid{ grid-template-columns: 1fr; }
+    .content-grid, body[data-view="calendar"] .content-grid{ grid-template-columns: 1fr; }
     .stats{ grid-template-columns: repeat(2,1fr); }
+    body[data-view="calendar"] .day-cell{ min-height: 76px; }
   }
   @media (max-width: 860px){
     body{ flex-direction: column; height: auto; overflow: visible; }
@@ -1314,32 +1346,52 @@ function renderCalendar(){
   const daysInMonth = new Date(y, m+1, 0).getDate();
   const daysInPrevMonth = new Date(y, m, 0).getDate();
 
-  const eventDates = new Set(events.map(e => e.date));
+  const eventsByDate = {};
+  events.forEach(e => {
+    if(!eventsByDate[e.date]) eventsByDate[e.date] = [];
+    eventsByDate[e.date].push(e);
+  });
 
+  const isFullCalendar = currentView === 'calendar';
+  const maxPills = 3;
   const todayKey = dateKey(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+
+  function dayPreviewHTML(dayEvents){
+    if(!isFullCalendar || dayEvents.length === 0) return '';
+    const shown = dayEvents.slice(0, maxPills);
+    const extra = dayEvents.length - shown.length;
+    const pills = shown.map(ev => {
+      const c = tagColor(ev.tag);
+      return `<span class="day-pill" style="background:${c}22;color:${c}">${escapeHtml(ev.name)}</span>`;
+    }).join('');
+    const more = extra > 0 ? `<span class="day-pill more">+${toBn(extra)} আরও</span>` : '';
+    return `<div class="day-preview">${pills}${more}</div>`;
+  }
 
   let html = '';
   for(let i = firstDay - 1; i >= 0; i--){
-    html += `<div class="day-cell muted">${toBn(daysInPrevMonth - i)}</div>`;
+    html += `<div class="day-cell muted"><span class="daynum">${toBn(daysInPrevMonth - i)}</span></div>`;
   }
   for(let d = 1; d <= daysInMonth; d++){
     const key = dateKey(y,m,d);
-    const hasEvent = eventDates.has(key);
+    const dayEvents = eventsByDate[key] || [];
+    const hasEvent = dayEvents.length > 0;
     const isToday = key === todayKey;
     const isSelected = key === selectedDate;
     let cls = 'day-cell';
     if(isToday) cls += ' today';
     if(isSelected) cls += ' selected';
     if(hasEvent) cls += ' has-event';
-    html += `<div class="${cls}" onclick="selectDate('${key}')" title="${hasEvent ? 'এই তারিখে পরীক্ষা আছে' : ''}">
-      <span>${toBn(d)}</span>
-      ${hasEvent ? '<span class="exam-mark">🎓</span>' : ''}
+    html += `<div class="${cls}" onclick="selectDate('${key}')" title="${hasEvent && !isFullCalendar ? 'এই তারিখে পরীক্ষা আছে' : ''}">
+      <span class="daynum">${toBn(d)}</span>
+      ${hasEvent && !isFullCalendar ? '<span class="exam-mark">🎓</span>' : ''}
+      ${dayPreviewHTML(dayEvents)}
     </div>`;
   }
   const totalCells = firstDay + daysInMonth;
   const remaining = (7 - (totalCells % 7)) % 7;
   for(let d = 1; d <= remaining; d++){
-    html += `<div class="day-cell muted">${toBn(d)}</div>`;
+    html += `<div class="day-cell muted"><span class="daynum">${toBn(d)}</span></div>`;
   }
 
   document.getElementById('daysGrid').innerHTML = html;
