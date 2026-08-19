@@ -1,7 +1,23 @@
 import { getStore } from '@netlify/blobs';
 
+const DEFAULT_DASHBOARD_CARDS = {
+  totalExams: { label: 'মোট পরীক্ষা', visible: true },
+  upcomingExams: { label: 'আসন্ন পরীক্ষা', visible: true },
+  thisMonthExams: { label: 'এই মাসের আসন্ন পরীক্ষা', visible: true },
+  totalMarks: { label: 'মোট প্রাপ্ত নম্বর (প্রাপ্ত/মোট)', visible: true },
+  avgRank: { label: 'সেন্ট্রাল র‍্যাঙ্ক (গড়)', visible: true },
+  totalWrong: { label: 'মোট ভুল উত্তর', visible: true },
+  totalCorrect: { label: 'মোট ঠিক উত্তর', visible: true },
+  totalAdmission: { label: 'মোট এডমিশন পরীক্ষা', visible: true },
+  pastExams: { label: 'সমাপ্ত পরীক্ষা', visible: true },
+  avgPercent: { label: 'গড় প্রাপ্ত নম্বর (%)', visible: true },
+  bestRank: { label: 'সর্বোচ্চ কেন্দ্রীয় র‍্যাঙ্ক', visible: true }
+};
+
 const DEFAULT_STATE = {
   events: [],
+  gaps: [],
+  vuls: [],
   siteText: {
     brandTitle: 'NextGate',
     brandSubtitle: 'পরীক্ষা ট্র্যাকার',
@@ -17,9 +33,11 @@ const DEFAULT_STATE = {
     statMonthLabel: 'এই মাসে',
     statPastLabel: 'সমাপ্ত পরীক্ষা',
     primaryColor: '#D9333F',
-    greetingOverride: ''
+    greetingOverride: '',
+    dashboardCards: DEFAULT_DASHBOARD_CARDS
   },
-  tagColors: {}
+  tagColors: {},
+  customQuotes: []
 };
 
 const CORS_HEADERS = {
@@ -52,7 +70,7 @@ export default async (req) => {
       const adminPassword = process.env.ADMIN_PASSWORD;
       if (!adminPassword) {
         return new Response(
-          JSON.stringify({ error: 'ADMIN_PASSWORD env var is not set on the server. Add it in Netlify: Site configuration \u2192 Environment variables, then redeploy.' }),
+          JSON.stringify({ error: 'ADMIN_PASSWORD env var is not set on the server. Add it in Netlify: Site configuration → Environment variables, then redeploy.' }),
           { status: 500, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } }
         );
       }
@@ -76,10 +94,19 @@ export default async (req) => {
         });
       }
 
+      // Ensure dashboardCards is preserved
+      const safeSiteText = (body.siteText && typeof body.siteText === 'object') ? body.siteText : DEFAULT_STATE.siteText;
+      if (!safeSiteText.dashboardCards) {
+        safeSiteText.dashboardCards = DEFAULT_STATE.siteText.dashboardCards;
+      }
+
       const safeState = {
         events: Array.isArray(body.events) ? body.events : [],
-        siteText: (body.siteText && typeof body.siteText === 'object') ? body.siteText : DEFAULT_STATE.siteText,
-        tagColors: (body.tagColors && typeof body.tagColors === 'object') ? body.tagColors : {}
+        gaps: Array.isArray(body.gaps) ? body.gaps : [],
+        vuls: Array.isArray(body.vuls) ? body.vuls : [],
+        siteText: safeSiteText,
+        tagColors: (body.tagColors && typeof body.tagColors === 'object') ? body.tagColors : {},
+        customQuotes: Array.isArray(body.customQuotes) ? body.customQuotes : []
       };
 
       await store.setJSON('state', safeState);
