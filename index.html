@@ -2546,7 +2546,7 @@ function examTypeBadge(type){
 function eventCardHTML(ev){
   const cd = getCountdownInfo(ev.date, ev.time);
   const linkHtml = ev.link
-    ? `<a class="circular-link" href="${escapeAttr(ev.link)}" target="_blank" rel="noopener noreferrer">${ICON_LINK} সার্কুলার দেখুন</a>`
+    ? `<a class="circular-link" href="${escapeAttr(ev.link)}" target="_blank" rel="noopener noreferrer">${ICON_LINK} সার্কুলার </a>`
     : '';
   const tagHtml = ev.tag
     ? `<span class="ev-tag" style="background:${tagColor(ev.tag)}22; color:${tagColor(ev.tag)}"><span class="tagdot" style="background:${tagColor(ev.tag)}"></span>${escapeHtml(ev.tag)}</span>`
