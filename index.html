@@ -450,28 +450,37 @@
   /* ---------- QUOTE CARD ---------- */
   .quote-card{
     background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
-    padding: 22px; display:flex; flex-direction:column; gap:12px; margin:0;
+    padding: 24px; display:flex; flex-direction:column; gap:12px; margin:0;
     position:relative; overflow:hidden;
   }
    .quote-card-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
   .quote-card-head h2{ font-size: 15px; font-weight:700; display:flex; align-items:center; gap:8px; }
   .quote-card-head h2 svg{ width:18px; height:18px; color: var(--primary); }
-  .quote-refresh-btn{
-    width:32px; height:32px; border:none; background:var(--bg); border-radius:9px;
-    display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-muted);
-    transition: all .15s ease;
+      .quote-nav-btn{
+    width: 34px; height: 34px; padding: 0;
+    border:none; background:var(--bg); border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; color:var(--text-muted); transition: all .15s ease;
   }
-  .quote-refresh-btn:hover{ background: var(--primary-light); color: var(--primary); }
-  .quote-refresh-btn svg{ width:15px; height:15px; }
+  .quote-nav-btn:hover{ background: var(--primary-light); color: var(--primary); }
+  .quote-nav-btn svg{ width:16px; height:16px; pointer-events: none; }
   .quote-head-actions{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
-  .quote-text{ font-size: 1.25rem; line-height:1.6; color: var(--text); flex:1; font-weight:500; }
-  .quote-source{ font-size: 13px; font-weight:600; color: var(--primary); }
+  .quote-text{
+    font-size: 1.6rem; line-height:1.8; color: var(--text);
+    font-weight:500; white-space: pre-wrap; text-align:left; /* ★ এই লাইনটি যোগ করা হয়েছে */
+    flex:1;
+  }
+
+  .quote-source{
+    font-size: 13px; font-weight:600; color: var(--primary);
+    text-align:left; /* ★ ভাসানো বন্ধ করতে এই লাইনটি যোগ করা হয়েছে */
+  }
   .quote-list{ display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto; margin-bottom:4px; }
   .quote-list-item{
     display:flex; align-items:flex-start; gap:10px; padding:10px 12px;
     background: var(--bg); border-radius: var(--radius-sm); border:1px solid var(--border);
   }
-  .quote-list-item .qli-text{ flex:1; min-width:0; font-size:13.5px; line-height:1.5; }
+  .quote-list-item .qli-text{ flex:1; min-width:0; font-size:13.5px; line-height:1.5; white-space: pre-wrap; }
   .quote-list-item .qli-text .qli-source{ display:block; margin-top:3px; font-size:12px; color: var(--text-muted); font-weight:600; }
   .quote-list-item .qli-del{
     border:none; background:transparent; color: var(--text-faint); cursor:pointer;
@@ -1488,20 +1497,26 @@
           <div class="dash-scroll" id="dashAdmissionCards"></div>
         </div>
         <div class="quote-card" id="dashQuoteCard">
-          <div class="quote-card-head">
-            <h2>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2 4-1.25 0-1 .008-1 1.031V20c0 1 0 1 1 1z"/></svg>
-              <span id="quoteCardTitle">আজকের কথা</span>
-            </h2>
-            <div class="quote-head-actions">
-              <button class="quote-refresh-btn" onclick="openQuoteModal()" title="উক্তি সেট করুন">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-              </button>
-              <button class="quote-refresh-btn" onclick="refreshQuote()" title="নতুন কথা দেখুন">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
-              </button>
-            </div>
+                  <div class="quote-card-head">
+          <h2>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2 4-1.25 0-1 .008-1 1.031V20c0 1 0 1 1 1z"/></svg>
+            <span>উক্তি অথবা দোয়া</span>
+          </h2>
+          <div class="quote-head-actions">
+            <!-- আগের উক্তি (◀) -->
+            <button class="quote-nav-btn" onclick="prevQuote()" title="আগের উক্তি">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <!-- পরের উক্তি (▶) -->
+            <button class="quote-nav-btn" onclick="nextQuote()" title="পরের উক্তি">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+            <!-- সম্পাদনা বাটন (পেনসিল) -->
+            <button class="quote-nav-btn" onclick="openQuoteModal()" title="উক্তি সম্পাদনা করুন" style="margin-left:6px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            </button>
           </div>
+        </div>
           <div class="quote-text" id="quoteText"></div>
           <div class="quote-source" id="quoteSource"></div>
         </div>
@@ -1574,9 +1589,9 @@
         </div>
       </div>
       <div class="field">
-        <label>বিস্তারিত লিংক (ঐচ্ছিক)</label>
+        <label> বিস্তারিত লিংক (ঐচ্ছিক)</label>
         <input type="url" id="fLink" placeholder="https://example.com/circular.pdf">
-        <div class="field-hint">ভর্তি বিজ্ঞপ্তি বা বিস্তারিতের লিংক দিলে কার্ডে একটি বাটন দেখাবে</div>
+        <div class="field-hint">ভর্তি বিজ্ঞপ্তি বা বিস্তারিত লিংক দিলে কার্ডে একটি বাটন দেখাবে</div>
       </div>
       <div class="modal-actions">
         <button type="button" class="btn-cancel" onclick="closeModal()">বাতিল</button>
@@ -1790,28 +1805,31 @@
 
 <div class="modal-overlay" id="quoteModalOverlay">
   <div class="modal">
-    <div class="modal-head">
-      <h3>উক্তি সেট করুন</h3>
-      <button class="modal-close" onclick="closeQuoteModal()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-      </button>
-    </div>
-    <form id="quoteForm" onsubmit="return addCustomQuote(event)">
-      <div class="settings-section-label">নতুন উক্তি যোগ করুন</div>
+            <form id="quoteForm" onsubmit="return addCustomQuote(event)">
+      <input type="hidden" id="editingQuoteIndex">
+      <div class="modal-head">
+        <h3 id="quoteModalTitle">উক্তি/দোয়া সেট করুন</h3>
+        <button class="modal-close" onclick="closeQuoteModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      
+      <div class="settings-section-label">নতুন উক্তি/দোয়া যোগ করুন</div>
       <div class="field">
-        <label>উক্তির লেখা</label>
-        <textarea id="setQuoteText" maxlength="300" placeholder="উক্তিটি এখানে লিখুন" required></textarea>
+        <label>টেক্সট লিখুন <span class="req">*</span></label>
+        <textarea id="setQuoteText" maxlength="300" placeholder="উক্তি বা দোয়া এখানে লিখুন (Enter চেপে নতুন লাইন যুক্ত করুন)" required style="min-height: 80px;"></textarea>
       </div>
       <div class="field">
-        <label>উৎস / বক্তার নাম</label>
+        <label>উৎস / বক্তার নাম (ঐচ্ছিক)</label>
         <input type="text" id="setQuoteSource" maxlength="60" placeholder="যেমনঃ আপনার নাম">
       </div>
       <div class="modal-actions">
-        <button type="submit" class="btn-save">যোগ করুন</button>
+        <button type="button" class="btn-cancel" onclick="closeQuoteModal()">বাতিল</button>
+        <button type="submit" class="btn-save" id="quoteFormSubmitBtn">যোগ করুন</button>
       </div>
     </form>
 
-    <div class="settings-section-label" style="margin-top:18px;">আপনার যোগ করা উক্তিসমূহ</div>
+    <div class="settings-section-label" style="margin-top:18px;">আপনার যোগ করা উক্তি ও দোয়াসমূহ</div>
     <div class="quote-list" id="customQuoteList"></div>
     <div class="modal-actions">
       <button type="button" class="btn-save" onclick="closeQuoteModal()">সম্পন্ন হয়েছে</button>
@@ -2781,12 +2799,19 @@ function renderQuote(){
   textEl.textContent = q.text;
   srcEl.textContent = q.source ? ('— ' + q.source) : '';
 }
-function refreshQuote(){
+function prevQuote(){
   const all = getAllQuotes();
-  currentQuoteIdx = (currentQuoteIdx + 1) % all.length;
+  if(all.length === 0) return;
+  currentQuoteIdx = (currentQuoteIdx - 1 + all.length) % all.length;
   renderQuote();
 }
 
+function nextQuote(){
+  const all = getAllQuotes();
+  if(all.length === 0) return;
+  currentQuoteIdx = (currentQuoteIdx + 1) % all.length;
+  renderQuote();
+}
 /* ---- custom quote manager ---- */
 function openQuoteModal(){
   closeSidebar();
@@ -2805,33 +2830,70 @@ function renderCustomQuoteList(){
   const wrap = document.getElementById('customQuoteList');
   if(!wrap) return;
   if(customQuotes.length === 0){
-    wrap.innerHTML = '<div class="quote-empty-hint">এখনো কোনো উক্তি যোগ করা হয়নি</div>';
+    wrap.innerHTML = '<div class="quote-empty-hint">এখনো কোনো উক্তি বা দোয়া যোগ করা হয়নি</div>';
     return;
   }
   wrap.innerHTML = customQuotes.map((q, i) => `
     <div class="quote-list-item">
       <div class="qli-text">${escapeHtml(q.text)}${q.source ? `<span class="qli-source">— ${escapeHtml(q.source)}</span>` : ''}</div>
-      <button type="button" class="qli-del" onclick="deleteCustomQuote(${i})" title="মুছে ফেলুন">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
-      </button>
+      <div style="display:flex; gap:4px; flex-shrink:0;">
+        <button type="button" class="qli-edit" onclick="editCustomQuote(${i})" title="সম্পাদনা করুন" style="border:none; background:transparent; color:var(--text-muted); cursor:pointer; border-radius:8px; padding:4px; display:flex; align-items:center;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </button>
+        <button type="button" class="qli-del" onclick="deleteCustomQuote(${i})" title="মুছে ফেলুন" style="border:none; background:transparent; color:var(--text-muted); cursor:pointer; border-radius:8px; padding:4px; display:flex; align-items:center;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+        </button>
+      </div>
     </div>
   `).join('');
 }
+function editCustomQuote(index){
+  const q = customQuotes[index];
+  if(!q) return;
+  
+  document.getElementById('editingQuoteIndex').value = index;
+  document.getElementById('setQuoteText').value = q.text;
+  document.getElementById('setQuoteSource').value = q.source || '';
+  
+  document.getElementById('quoteModalTitle').textContent = 'উক্তি/দোয়া সম্পাদনা করুন';
+  document.getElementById('quoteFormSubmitBtn').textContent = 'আপডেট করুন';
+  
+  document.getElementById('quoteModalOverlay').classList.add('open');
+}
+
 function addCustomQuote(e){
   e.preventDefault();
   const text = document.getElementById('setQuoteText').value.trim();
   const source = document.getElementById('setQuoteSource').value.trim();
-  if(!text) return false;
-  customQuotes.push({ text, source });
+  const editIndex = document.getElementById('editingQuoteIndex').value;
+
+  if(!text) {
+    showToast('অনুগ্রহ করে টেক্সটটি লিখুন');
+    return false;
+  }
+
+  if(editIndex !== ''){
+    const idx = parseInt(editIndex);
+    customQuotes[idx] = { text, source };
+    document.getElementById('editingQuoteIndex').value = ''; 
+    showToast('✅ উক্তি/দোয়া সফলভাবে আপডেট হয়েছে');
+  } else {
+    customQuotes.push({ text, source });
+    showToast('✅ নতুন উক্তি/দোয়া যোগ করা হয়েছে');
+  }
+
   document.getElementById('setQuoteText').value = '';
   document.getElementById('setQuoteSource').value = '';
+  document.getElementById('quoteModalTitle').textContent = 'উক্তি/দোয়া সেট করুন';
+  document.getElementById('quoteFormSubmitBtn').textContent = 'যোগ করুন';
+  
+  closeQuoteModal();
   renderCustomQuoteList();
-  currentQuoteIdx = QUOTES.length + customQuotes.length - 1;
+  currentQuoteIdx = 0;
   renderQuote();
-  persistState('✅ উক্তি যোগ ও পাবলিশ হয়েছে');
+  persistState('✅ উক্তি/দোয়া পরিবর্তন ও পাবলিশ হয়েছে');
   return false;
-}
-function deleteCustomQuote(i){
+}function deleteCustomQuote(i){
   customQuotes.splice(i, 1);
   renderCustomQuoteList();
   currentQuoteIdx = 0;
