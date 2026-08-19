@@ -1574,9 +1574,9 @@
         </div>
       </div>
       <div class="field">
-        <label>সার্কুলার লিংক (ঐচ্ছিক)</label>
+        <label>বিস্তারিত লিংক (ঐচ্ছিক)</label>
         <input type="url" id="fLink" placeholder="https://example.com/circular.pdf">
-        <div class="field-hint">ভর্তি বিজ্ঞপ্তি বা সার্কুলারের লিংক দিলে কার্ডে একটি বাটন দেখাবে</div>
+        <div class="field-hint">ভর্তি বিজ্ঞপ্তি বা বিস্তারিতের লিংক দিলে কার্ডে একটি বাটন দেখাবে</div>
       </div>
       <div class="modal-actions">
         <button type="button" class="btn-cancel" onclick="closeModal()">বাতিল</button>
@@ -2546,7 +2546,7 @@ function examTypeBadge(type){
 function eventCardHTML(ev){
   const cd = getCountdownInfo(ev.date, ev.time);
   const linkHtml = ev.link
-    ? `<a class="circular-link" href="${escapeAttr(ev.link)}" target="_blank" rel="noopener noreferrer">${ICON_LINK} সার্কুলার </a>`
+    ? `<a class="circular-link" href="${escapeAttr(ev.link)}" target="_blank" rel="noopener noreferrer">${ICON_LINK} বিস্তারিত </a>`
     : '';
   const tagHtml = ev.tag
     ? `<span class="ev-tag" style="background:${tagColor(ev.tag)}22; color:${tagColor(ev.tag)}"><span class="tagdot" style="background:${tagColor(ev.tag)}"></span>${escapeHtml(ev.tag)}</span>`
