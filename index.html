@@ -2510,7 +2510,7 @@ function renderNearest(){
   const cd = getCountdownInfo(ev.date, ev.time);
   const ring = document.getElementById('nearestRing');
   ring.classList.toggle('normal', cd.cls === 'normal');
-  document.getElementById('nearestDays').textContent = toBn(cd.days);
+    document.getElementById('nearestDays').textContent = toBn(new Date(ev.date).getDate());
   document.getElementById('nearestTitle').textContent = ev.name;
   document.getElementById('nearestDate').textContent = `${fmtDateShort(ev.date)} · ${cd.text}`;
 }
