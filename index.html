@@ -2919,26 +2919,46 @@ function renderDashCalendar(){
 
   html += '<div class="cal-weekdays">' + bnWeekdaysShort.map(w => '<span>' + w + '</span>').join('') + '</div>';
   html += '<div class="cal-days" id="dashDaysGrid">';
+  
   for(let i = firstDay - 1; i >= 0; i--){
     html += '<div class="day-cell muted"><span class="daynum">' + toBn(daysInPrevMonth - i) + '</span></div>';
   }
+  
   for(let d = 1; d <= daysInMonth; d++){
     const key = dateKey(y, m, d);
     const dayEvents = eventsByDate[key] || [];
     const hasEvent = dayEvents.length > 0;
     const isToday = key === todayKey;
     const isSelected = key === selectedDate;
+    
     let cls = 'day-cell';
     if(isToday) cls += ' today';
     if(isSelected) cls += ' selected';
-    if(hasEvent) cls += ' has-event';
 
-    // লক্ষ্য করুন: নিচে switchView('calendar') সরিয়ে শুধু selectDate রাখা হয়েছে
+    // === রঙিন হাইলাইট ফিরিয়ে আনা হয়েছে ===
+    let markHtml = '';
+    if(hasEvent){
+      const hasRegular = dayEvents.some(e => e.examType !== 'admission');
+      const hasAdmission = dayEvents.some(e => e.examType === 'admission');
+      
+      if(hasRegular && hasAdmission){
+        cls += ' has-both';
+        markHtml = `<span class="exam-mark exam-mark-admission" title="ভর্তি পরীক্ষা"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5-10-5Z"/><path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/></svg></span>`;
+      } else if(hasRegular){
+        cls += ' has-regular';
+        markHtml = `<span class="exam-mark exam-mark-regular" title="রেগুলার পরীক্ষা"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h4M9 11V4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2h-8"/></svg></span>`;
+      } else if(hasAdmission){
+        cls += ' has-admission';
+        markHtml = `<span class="exam-mark exam-mark-admission" title="ভর্তি পরীক্ষা"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5-10-5Z"/><path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/></svg></span>`;
+      }
+    }
+
+    // === ক্লিক ইভেন্ট সঠিকভাবে বসানো হয়েছে (switchView সরানো হয়েছে) ===
     html += `<div class="${cls}" onclick="selectDate('${key}')">` + 
-      `<span class="daynum">${toBn(d)}</span>` +
-      (hasEvent ? '<span class="exam-mark">🎓</span>' : '') +
+      `<span class="daynum">${toBn(d)}</span>` + markHtml +
     '</div>';
   }
+
   const totalCells = firstDay + daysInMonth;
   const remaining = (7 - (totalCells % 7)) % 7;
   for(let d = 1; d <= remaining; d++){
