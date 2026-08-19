@@ -1735,7 +1735,21 @@
       </div>
 
       <div class="settings-section-label">পরিসংখ্যান কার্ডের লেবেল</div>
+      
+      <div class="settings-section-label">কাউন্টডাউন টেক্সট</div>
       <div class="field-row">
+        <div class="field"><label>পরীক্ষা সম্পন্ন হলে</label><input type="text" id="setCountdownPast" maxlength="40"></div>
+        <div class="field"><label>আজকের পরীক্ষা</label><input type="text" id="setCountdownToday" maxlength="40"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>আগামীকাল পরীক্ষা</label><input type="text" id="setCountdownTomorrow" maxlength="40"></div>
+        <div class="field"><label>শুধু দিন বাকি (যেমন: আর {days} দিন বাকি)</label><input type="text" id="setCountdownDays" maxlength="40" placeholder="আর {days} দিন বাকি"></div>
+      </div>
+      <div class="field">
+        <label>দিন ও ঘন্টা বাকি (যেমন: আর {days} দিন {hours} ঘন্টা বাকি)</label>
+        <input type="text" id="setCountdownDaysHours" maxlength="50" placeholder="আর {days} দিন {hours} ঘন্টা বাকি">
+      </div>
+<div class="field-row">
         <div class="field">
           <label>মোট পরীক্ষা</label>
           <input type="text" id="setStatTotal" maxlength="30">
@@ -1959,6 +1973,11 @@ const DEFAULT_TEXT = {
   statPastLabel: 'সমাপ্ত পরীক্ষা',
   primaryColor: '#D9333F',
   greetingOverride: '',
+  countdownPast: 'পরীক্ষা সম্পন্ন হয়েছে',
+  countdownToday: 'আজই পরীক্ষা!',
+  countdownTomorrow: 'আগামীকাল',
+  countdownDays: 'আর {days} দিন বাকি',
+  countdownDaysHours: 'আর {days} দিন {hours} ঘন্টা বাকি',
   dashboardCards: {
     totalExams: { label: 'মোট পরীক্ষা', visible: true },
     upcomingExams: { label: 'আসন্ন পরীক্ষা', visible: true },
@@ -2083,7 +2102,11 @@ function openSettingsModal(){
   document.getElementById('setStatSoon').value = siteText.statSoonLabel;
   document.getElementById('setStatMonth').value = siteText.statMonthLabel;
   document.getElementById('setStatPast').value = siteText.statPastLabel;
-
+  document.getElementById('setCountdownPast').value = siteText.countdownPast || DEFAULT_TEXT.countdownPast;
+  document.getElementById('setCountdownToday').value = siteText.countdownToday || DEFAULT_TEXT.countdownToday;
+  document.getElementById('setCountdownTomorrow').value = siteText.countdownTomorrow || DEFAULT_TEXT.countdownTomorrow;
+  document.getElementById('setCountdownDays').value = siteText.countdownDays || DEFAULT_TEXT.countdownDays;
+  document.getElementById('setCountdownDaysHours').value = siteText.countdownDaysHours || DEFAULT_TEXT.countdownDaysHours;
   // Populate Dashboard Cards Settings (Kept exactly as you had)
   const container = document.getElementById('dashboardCardsSettings');
   container.innerHTML = '';
@@ -2129,6 +2152,11 @@ function saveSettings(e){
   siteText.statSoonLabel = document.getElementById('setStatSoon').value.trim() || DEFAULT_TEXT.statSoonLabel;
   siteText.statMonthLabel = document.getElementById('setStatMonth').value.trim() || DEFAULT_TEXT.statMonthLabel;
   siteText.statPastLabel = document.getElementById('setStatPast').value.trim() || DEFAULT_TEXT.statPastLabel;
+  siteText.countdownPast = document.getElementById('setCountdownPast').value.trim() || DEFAULT_TEXT.countdownPast;
+  siteText.countdownToday = document.getElementById('setCountdownToday').value.trim() || DEFAULT_TEXT.countdownToday;
+  siteText.countdownTomorrow = document.getElementById('setCountdownTomorrow').value.trim() || DEFAULT_TEXT.countdownTomorrow;
+  siteText.countdownDays = document.getElementById('setCountdownDays').value.trim() || DEFAULT_TEXT.countdownDays;
+  siteText.countdownDaysHours = document.getElementById('setCountdownDaysHours').value.trim() || DEFAULT_TEXT.countdownDaysHours;
 
   // Save Dashboard Cards
   const dcLabels = document.querySelectorAll('.dc-label');
@@ -2439,23 +2467,32 @@ function getCountdownInfo(dateStr, timeStr){
   const now = new Date();
   const target = new Date(dateStr + 'T' + (timeStr || '23:59') + ':00');
   const diffMs = target - now;
-  const diffDays = Math.ceil(diffMs / (1000*60*60*24));
+  const diffDays = Math.floor(diffMs / (1000*60*60*24));
+  const remainingMs = diffMs % (1000*60*60*24);
+  const diffHours = Math.floor(remainingMs / (1000*60*60));
 
   if(diffMs < 0){
-    return { text: 'পরীক্ষা সম্পন্ন হয়েছে', cls: 'past', isPast: true, days: 0 };
+    return { text: siteText.countdownPast || DEFAULT_TEXT.countdownPast, cls: 'past', isPast: true };
   }
   if(diffDays === 0){
-    return { text: 'আজই পরীক্ষা!', cls: 'soon', isPast: false, days: 0 };
+    return { text: siteText.countdownToday || DEFAULT_TEXT.countdownToday, cls: 'soon', isPast: false };
   }
-  if(diffDays === 1){
-    return { text: 'আগামীকাল', cls: 'soon', isPast: false, days: 1 };
+  if(diffDays === 1 && diffHours === 0){
+    return { text: siteText.countdownTomorrow || DEFAULT_TEXT.countdownTomorrow, cls: 'soon', isPast: false };
   }
-  if(diffDays <= 7){
-    return { text: `আর ${toBn(diffDays)} দিন বাকি`, cls: 'soon', isPast: false, days: diffDays };
-  }
-  return { text: `আর ${toBn(diffDays)} দিন বাকি`, cls: 'normal', isPast: false, days: diffDays };
-}
 
+  let text = siteText.countdownDays || DEFAULT_TEXT.countdownDays;
+  let cls = diffDays <= 7 ? 'soon' : 'normal';
+
+  if(diffHours > 0){
+    const template = siteText.countdownDaysHours || DEFAULT_TEXT.countdownDaysHours;
+    text = template.replace('{days}', toBn(diffDays)).replace('{hours}', toBn(diffHours));
+  } else {
+    text = text.replace('{days}', toBn(diffDays));
+  }
+
+  return { text, cls, isPast: false };
+}
 /* ================= NEAREST EXAM WIDGET ================= */
 function renderNearest(){
   const now = new Date();
