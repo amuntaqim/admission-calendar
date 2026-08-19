@@ -34,6 +34,11 @@ const DEFAULT_STATE = {
     statPastLabel: 'সমাপ্ত পরীক্ষা',
     primaryColor: '#D9333F',
     greetingOverride: '',
+    countdownPast: 'পরীক্ষা সম্পন্ন হয়েছে',
+    countdownToday: 'আজই পরীক্ষা!',
+    countdownTomorrow: 'আগামীকাল',
+    countdownDays: 'আর {days} দিন বাকি',
+    countdownDaysHours: 'আর {days} দিন {hours} ঘন্টা বাকি',
     dashboardCards: DEFAULT_DASHBOARD_CARDS
   },
   tagColors: {},
@@ -46,81 +51,116 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization'
 };
 
+function jsonResponse(body, status = 200, extraHeaders = {}) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json', ...CORS_HEADERS, ...extraHeaders }
+  });
+}
+
 export default async (req) => {
+  let store;
   try {
-    const store = getStore({ name: 'nextgate-data', consistency: 'strong' });
-
-    if (req.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: CORS_HEADERS });
-    }
-
-    if (req.method === 'GET') {
-      let data = null;
-      try {
-        data = await store.get('state', { type: 'json' });
-      } catch (e) {
-        data = null;
-      }
-      return new Response(JSON.stringify(data || DEFAULT_STATE), {
-        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store, no-cache, must-revalidate', ...CORS_HEADERS }
-      });
-    }
-
-    if (req.method === 'POST') {
-      const adminPassword = process.env.ADMIN_PASSWORD;
-      if (!adminPassword) {
-        return new Response(
-          JSON.stringify({ error: 'ADMIN_PASSWORD env var is not set on the server. Add it in Netlify: Site configuration → Environment variables, then redeploy.' }),
-          { status: 500, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } }
-        );
-      }
-
-      const authHeader = req.headers.get('authorization') || '';
-      const token = authHeader.replace(/^Bearer\s+/i, '');
-      if (token !== adminPassword) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-          status: 401,
-          headers: { 'Content-Type': 'application/json', ...CORS_HEADERS }
-        });
-      }
-
-      let body;
-      try {
-        body = await req.json();
-      } catch (e) {
-        return new Response(JSON.stringify({ error: 'Invalid JSON in request body: ' + e.message }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json', ...CORS_HEADERS }
-        });
-      }
-
-      // Ensure dashboardCards is preserved
-      const safeSiteText = (body.siteText && typeof body.siteText === 'object') ? body.siteText : DEFAULT_STATE.siteText;
-      if (!safeSiteText.dashboardCards) {
-        safeSiteText.dashboardCards = DEFAULT_STATE.siteText.dashboardCards;
-      }
-
-      const safeState = {
-        events: Array.isArray(body.events) ? body.events : [],
-        gaps: Array.isArray(body.gaps) ? body.gaps : [],
-        vuls: Array.isArray(body.vuls) ? body.vuls : [],
-        siteText: safeSiteText,
-        tagColors: (body.tagColors && typeof body.tagColors === 'object') ? body.tagColors : {},
-        customQuotes: Array.isArray(body.customQuotes) ? body.customQuotes : []
-      };
-
-      await store.setJSON('state', safeState);
-
-      return new Response(JSON.stringify({ ok: true }), {
-        headers: { 'Content-Type': 'application/json', ...CORS_HEADERS }
-      });
-    }
-
-    return new Response('Method Not Allowed', { status: 405, headers: CORS_HEADERS });
-  } catch (fatalError) {
-    return new Response(
-      JSON.stringify({ error: 'Function crashed: ' + (fatalError && fatalError.message ? fatalError.message : String(fatalError)) }),
-      { status: 500, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } }
-    );
+    store = getStore({ name: 'nextgate-data', consistency: 'strong' });
+  } catch (storeError) {
+    console.error('[nextgate/data] getStore() failed:', storeError);
+    return jsonResponse({
+      error: 'Could not initialize Netlify Blobs store: ' + (storeError && storeError.message ? storeError.message : String(storeError))
+    }, 500);
   }
+
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: CORS_HEADERS });
+  }
+
+  if (req.method === 'GET') {
+    try {
+      const data = await store.get('state', { type: 'json' });
+      console.log('[nextgate/data] GET -> gaps:', data && Array.isArray(data.gaps) ? data.gaps.length : 0,
+        'vuls:', data && Array.isArray(data.vuls) ? data.vuls.length : 0,
+        'events:', data && Array.isArray(data.events) ? data.events.length : 0);
+      return jsonResponse(data || DEFAULT_STATE, 200, { 'Cache-Control': 'no-store, no-cache, must-revalidate' });
+    } catch (readError) {
+      console.error('[nextgate/data] GET failed, returning defaults:', readError);
+      return jsonResponse(DEFAULT_STATE, 200, { 'Cache-Control': 'no-store, no-cache, must-revalidate' });
+    }
+  }
+
+  if (req.method === 'POST') {
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    if (!adminPassword) {
+      return jsonResponse({
+        error: 'ADMIN_PASSWORD env var is not set on the server. Add it in Netlify: Site configuration → Environment variables, then redeploy.'
+      }, 500);
+    }
+
+    const authHeader = req.headers.get('authorization') || '';
+    const token = authHeader.replace(/^Bearer\s+/i, '');
+    if (token !== adminPassword) {
+      return jsonResponse({ error: 'Unauthorized' }, 401);
+    }
+
+    let body;
+    try {
+      body = await req.json();
+    } catch (parseError) {
+      return jsonResponse({ error: 'Invalid JSON in request body: ' + parseError.message }, 400);
+    }
+
+    if (!body || typeof body !== 'object') {
+      return jsonResponse({ error: 'Request body must be a JSON object.' }, 400);
+    }
+
+    // Ensure dashboardCards is always present, even if the client sent a partial siteText
+    const safeSiteText = (body.siteText && typeof body.siteText === 'object') ? body.siteText : DEFAULT_STATE.siteText;
+    if (!safeSiteText.dashboardCards || typeof safeSiteText.dashboardCards !== 'object') {
+      safeSiteText.dashboardCards = DEFAULT_STATE.siteText.dashboardCards;
+    }
+
+    const safeState = {
+      events: Array.isArray(body.events) ? body.events : [],
+      gaps: Array.isArray(body.gaps) ? body.gaps : [],
+      vuls: Array.isArray(body.vuls) ? body.vuls : [],
+      siteText: safeSiteText,
+      tagColors: (body.tagColors && typeof body.tagColors === 'object') ? body.tagColors : {},
+      customQuotes: Array.isArray(body.customQuotes) ? body.customQuotes : []
+    };
+
+    // Debug log so this is traceable in Netlify function logs (Deploys -> your deploy -> Functions -> data -> logs)
+    console.log('[nextgate/data] POST incoming -> events:', safeState.events.length,
+      'gaps:', safeState.gaps.length, 'vuls:', safeState.vuls.length);
+    if (Array.isArray(body.gaps) === false) {
+      console.warn('[nextgate/data] body.gaps was NOT an array, coerced to []. Raw value was:', JSON.stringify(body.gaps));
+    }
+    if (Array.isArray(body.vuls) === false) {
+      console.warn('[nextgate/data] body.vuls was NOT an array, coerced to []. Raw value was:', JSON.stringify(body.vuls));
+    }
+
+    try {
+      await store.setJSON('state', safeState);
+    } catch (writeError) {
+      console.error('[nextgate/data] store.setJSON failed:', writeError);
+      return jsonResponse({
+        error: 'Failed to write to Netlify Blobs: ' + (writeError && writeError.message ? writeError.message : String(writeError))
+      }, 500);
+    }
+
+    // Read back immediately to confirm the write actually persisted (catches silent blob failures)
+    try {
+      const verify = await store.get('state', { type: 'json' });
+      const savedGaps = verify && Array.isArray(verify.gaps) ? verify.gaps.length : 0;
+      const savedVuls = verify && Array.isArray(verify.vuls) ? verify.vuls.length : 0;
+      console.log('[nextgate/data] POST verified after write -> gaps:', savedGaps, 'vuls:', savedVuls);
+      if (savedGaps !== safeState.gaps.length || savedVuls !== safeState.vuls.length) {
+        console.error('[nextgate/data] MISMATCH after write! sent gaps:', safeState.gaps.length,
+          'saved gaps:', savedGaps, 'sent vuls:', safeState.vuls.length, 'saved vuls:', savedVuls);
+      }
+    } catch (verifyError) {
+      console.error('[nextgate/data] verify-read after write failed:', verifyError);
+    }
+
+    return jsonResponse({ ok: true, counts: { events: safeState.events.length, gaps: safeState.gaps.length, vuls: safeState.vuls.length } });
+  }
+
+  return new Response('Method Not Allowed', { status: 405, headers: CORS_HEADERS });
 };
